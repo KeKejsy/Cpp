@@ -50,6 +50,9 @@ public:
     bool isPlaying() const { return m_state == GameState::Playing; }
     double getMusicTime() const;
 
+    // 测试用：手动设置当前时间（不依赖音乐播放）
+    void setTestTime(double time);
+
 private:
     int judgeNote(double noteTime, double currentTime);
     void updateStats(int judgment);
@@ -62,4 +65,5 @@ private:
     Judgment m_latestJudgment;
     double m_latestJudgmentTime;
     std::vector<bool> m_keyPressed;
+    double m_testTime;
 };

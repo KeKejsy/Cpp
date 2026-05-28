@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__ide__getDiagnostics",
+      "Bash(g++ *)",
+      "Bash(mkdir -p build)",
+      "Bash(cmake .. -G \"MinGW Makefiles\")",
+      "Bash(mingw32-make test_member_b)",
+      "Bash(ninja test_member_b)",
+      "Bash(./test_member_b.exe)",
+      "Bash(cmd.exe *)",
+      "Bash(powershell.exe *)",
+      "Bash(echo 'int main\\(\\) { return 0; }')",
+      "Bash(/tmp/test.exe)",
+      "Bash(echo \"Exit code: $?\")",
+      "Bash(/c/Users/30421/Desktop/Rhythm-Game/build/test_member_b.exe *)",
+      "Bash(PATH=\"/c/msys64/ucrt64/bin:$PATH\" ./test_member_b.exe *)",
+      "Bash(PATH=/c/msys64/ucrt64/bin:__TRACKED_VAR__ ./test_member_b.exe)",
+      "Bash(ninja rhythm_master *)",
+      "Bash(cmake .. -G Ninja)",
+      "Bash(./rhythm_master.exe)"
+    ]
+  }
+}

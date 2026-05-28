@@ -4,6 +4,10 @@
 #include <iomanip>
 #include "GameFramework.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 void printSeparator() {
     std::cout << "========================================" << std::endl;
 }
@@ -17,6 +21,10 @@ void printNoteInfo(const Note& note, int index) {
 }
 
 int main() {
+#ifdef _WIN32
+    SetConsoleOutputCP(65001);  // 设置控制台为 UTF-8 编码
+#endif
+
     printSeparator();
     std::cout << "节奏大师 - 成员 B 完整功能测试" << std::endl;
     printSeparator();
@@ -216,6 +224,10 @@ int main() {
     std::cout << std::endl;
 
     std::cout << "等待成员 A 和成员 C 的模块集成..." << std::endl;
+
+    std::cout << std::endl;
+    std::cout << "按任意键退出..." << std::endl;
+    std::cin.get();
 
     return 0;
 }

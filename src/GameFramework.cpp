@@ -5,7 +5,8 @@ GameFramework::GameFramework()
     : m_state(GameState::Menu)
     , m_latestJudgment(Judgment::None)
     , m_latestJudgmentTime(0.0)
-    , m_keyPressed(4, false) {
+    , m_keyPressed(4, false)
+    , m_testTime(-1.0) {
     resetStats();
 }
 
@@ -13,8 +14,8 @@ GameFramework::~GameFramework() = default;
 
 void GameFramework::loadChart(const Chart& chart, const std::string& musicPath) {
     m_chart = chart;
-    if (!m_music.openFromFile(musicPath)) {
-        return;
+    if (!musicPath.empty()) {
+        m_music.openFromFile(musicPath);
     }
 }
 
@@ -91,13 +92,16 @@ void GameFramework::endGame() {
 int GameFramework::judgeNote(double noteTime, double currentTime) {
     double diff = std::abs(currentTime - noteTime);
 
-    if (diff <= 0.05) {
+    // 浮点精度容差（1e-9），避免 0.10 被判为 > 0.10 的情况
+    const double eps = 1e-9;
+
+    if (diff <= 0.05 + eps) {
         m_latestJudgment = Judgment::Perfect;
         return 3;
-    } else if (diff <= 0.10) {
+    } else if (diff <= 0.10 + eps) {
         m_latestJudgment = Judgment::Great;
         return 2;
-    } else if (diff <= 0.15) {
+    } else if (diff <= 0.15 + eps) {
         m_latestJudgment = Judgment::Good;
         return 1;
     }
@@ -147,5 +151,12 @@ void GameFramework::resetStats() {
 }
 
 double GameFramework::getMusicTime() const {
+    if (m_testTime >= 0.0) {
+        return m_testTime;
+    }
     return m_music.getPlayingOffset().asSeconds();
+}
+
+void GameFramework::setTestTime(double time) {
+    m_testTime = time;
 }

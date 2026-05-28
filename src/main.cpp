@@ -2,7 +2,14 @@
 #include <string>
 #include "GameFramework.h"
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 int main() {
+#ifdef _WIN32
+    SetConsoleOutputCP(65001);
+#endif
     std::cout << "=== 节奏大师 - 成员 B 游戏框架测试 ===" << std::endl;
     std::cout << std::endl;
 
@@ -62,11 +69,12 @@ int main() {
         // 由于 judgeNote 是私有的，我们通过公开接口测试
         // 这里只是展示判定逻辑
         double diff = std::abs(test.currentTime - test.noteTime);
-        if (diff <= 0.05) {
+        const double eps = 1e-9;
+        if (diff <= 0.05 + eps) {
             std::cout << "Perfect (+300分)" << std::endl;
-        } else if (diff <= 0.10) {
+        } else if (diff <= 0.10 + eps) {
             std::cout << "Great (+200分)" << std::endl;
-        } else if (diff <= 0.15) {
+        } else if (diff <= 0.15 + eps) {
             std::cout << "Good (+100分)" << std::endl;
         } else {
             std::cout << "Miss (+0分)" << std::endl;
@@ -98,6 +106,10 @@ int main() {
     std::cout << "  4. 得分系统 (分数、连击、最大连击)" << std::endl;
     std::cout << "  5. 音乐播放集成 (SFML Music)" << std::endl;
     std::cout << "  6. 按键处理接口 (D/F/J/K 对应轨道 0/1/2/3)" << std::endl;
+
+    std::cout << std::endl;
+    std::cout << "按任意键退出..." << std::endl;
+    std::cin.get();
 
     return 0;
 }
