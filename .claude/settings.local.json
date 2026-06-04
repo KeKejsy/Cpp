@@ -18,7 +18,8 @@
       "Bash(PATH=/c/msys64/ucrt64/bin:__TRACKED_VAR__ ./test_member_b.exe)",
       "Bash(ninja rhythm_master *)",
       "Bash(cmake .. -G Ninja)",
-      "Bash(./rhythm_master.exe)"
+      "Bash(./rhythm_master.exe)",
+      "Bash(ninja -j4)"
     ]
   }
 }
