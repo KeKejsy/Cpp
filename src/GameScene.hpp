@@ -159,23 +159,55 @@ private:
     void drawNotes() {
         double currentTime = m_game.getMusicTime();
         const auto& notes = m_game.getNotes();
-        
+
         for (const auto& note : notes) {
             if (note.hit) continue;
-            
+
             double timeDiff = note.time - currentTime;
             if (timeDiff < -0.5f || timeDiff > 3.0f) continue;
-            
-            float noteY = m_trackY - static_cast<float>(timeDiff * 200.0);
-            if (noteY < 50.0f || noteY > m_trackY + 50.0f) continue;
-            
-            sf::RectangleShape noteShape(sf::Vector2f(m_trackWidth - 20.0f, 30.0f));
-            noteShape.setPosition(sf::Vector2f(
-                m_trackStartX + note.track * (m_trackWidth + 10.0f) + 10.0f,
-                noteY
-            ));
-            noteShape.setFillColor(m_tracks[note.track].color);
-            m_window.draw(noteShape);
+
+            float noteX = m_trackStartX + note.track * (m_trackWidth + 10.0f) + 10.0f;
+            float noteWidth = m_trackWidth - 20.0f;
+            sf::Color trackColor = m_tracks[note.track].color;
+
+            if (note.type == 1 && note.duration > 0.0) {
+                // hold 音符：渲染为长条矩形
+                float noteHeadY = m_trackY - static_cast<float>(timeDiff * 200.0);
+                double endTimeDiff = (note.time + note.duration) - currentTime;
+                float noteTailY = m_trackY - static_cast<float>(endTimeDiff * 200.0);
+
+                // 长条至少要有一定高度
+                float holdHeight = noteHeadY - noteTailY;
+                if (holdHeight < 10.0f) holdHeight = 10.0f;
+
+                // 只在可见范围内绘制
+                if (noteTailY < m_trackY + 50.0f && noteHeadY > 50.0f) {
+                    // 绘制长条（半透明）
+                    sf::RectangleShape holdBar(sf::Vector2f(noteWidth, holdHeight));
+                    holdBar.setPosition(sf::Vector2f(noteX, noteTailY));
+                    sf::Color holdColor = trackColor;
+                    holdColor.a = 100;  // 半透明
+                    holdBar.setFillColor(holdColor);
+                    m_window.draw(holdBar);
+
+                    // 绘制 hold 音符头部（实色，和 tap 一样大）
+                    if (noteHeadY >= 50.0f && noteHeadY <= m_trackY + 50.0f) {
+                        sf::RectangleShape noteShape(sf::Vector2f(noteWidth, 30.0f));
+                        noteShape.setPosition(sf::Vector2f(noteX, noteHeadY - 15.0f));
+                        noteShape.setFillColor(trackColor);
+                        m_window.draw(noteShape);
+                    }
+                }
+            } else {
+                // tap 音符：渲染为矩形（原有逻辑）
+                float noteY = m_trackY - static_cast<float>(timeDiff * 200.0);
+                if (noteY < 50.0f || noteY > m_trackY + 50.0f) continue;
+
+                sf::RectangleShape noteShape(sf::Vector2f(noteWidth, 30.0f));
+                noteShape.setPosition(sf::Vector2f(noteX, noteY));
+                noteShape.setFillColor(trackColor);
+                m_window.draw(noteShape);
+            }
         }
     }
 

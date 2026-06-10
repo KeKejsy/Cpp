@@ -23,6 +23,16 @@ target_link_libraries(rhythm_master
     comdlg32
 )
 
+# BeatDetector 测试程序
+add_executable(test_beat
+    src/test_beat.cpp
+    src/BeatDetector.cpp
+)
+target_link_libraries(test_beat
+    SFML::Audio
+    SFML::System
+)
+
 # 构建后自动复制 DLL
 if(MINGW_BIN_DIR)
     add_custom_command(TARGET rhythm_master POST_BUILD

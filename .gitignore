@@ -20,3 +20,8 @@ Desktop.ini
 *.dll
 *.so
 *.dylib
+
+# Test files
+test_*
+*.mp3
+*.log

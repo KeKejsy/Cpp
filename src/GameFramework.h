@@ -66,4 +66,9 @@ private:
     double m_latestJudgmentTime;
     std::vector<bool> m_keyPressed;
     double m_testTime;
+
+    // hold 音符追踪：每个轨道当前正在按住的音符索引（-1 表示无）
+    std::vector<int> m_activeHoldIndex;
+    // 每个轨道 hold 音符的原始判定结果（按下时判定，结算时使用）
+    std::vector<int> m_holdJudgment;
 };
