@@ -5,6 +5,7 @@ GameFramework::GameFramework()
     : m_state(GameState::Menu)
     , m_latestJudgment(Judgment::None)
     , m_latestJudgmentTime(0.0)
+    , m_latestJudgmentTrack(-1)
     , m_keyPressed(4, false)
     , m_testTime(-1.0)
     , m_activeHoldIndex(4, -1)
@@ -50,7 +51,9 @@ void GameFramework::update(double currentTime) {
             if (currentTime >= holdEndTime) {
                 // hold 音符时间到，自动完成，按原判定给分
                 note.hit = true;
+                note.hitTime = currentTime;
                 updateStats(m_holdJudgment[track]);
+                m_latestJudgmentTrack = track;
                 m_latestJudgmentTime = currentTime;
                 m_activeHoldIndex[track] = -1;
                 m_holdJudgment[track] = 0;
@@ -61,11 +64,24 @@ void GameFramework::update(double currentTime) {
     // auto-miss：未被按下的音符超时自动 miss
     for (auto& note : m_chart.notes) {
         if (!note.hit) {
-            // hold 音符用 duration 作为超时窗口，tap 用 0.15s
-            double missWindow = (note.type == 1 && note.duration > 0.0) ? note.duration + 0.15 : 0.15;
-            if (currentTime - note.time > missWindow) {
-                note.hit = true;
-                updateStats(0);
+            if (note.type == 1 && note.duration > 0.0) {
+                // hold 音符：尾部到达判定线时才 miss
+                if (currentTime >= note.time + note.duration) {
+                    note.hit = true;
+                    note.hitTime = currentTime;
+                    updateStats(0);
+                    m_latestJudgmentTrack = note.track;
+                    m_latestJudgmentTime = currentTime;
+                }
+            } else {
+                // tap 音符：超出判定窗口 miss
+                if (currentTime - note.time > 0.15) {
+                    note.hit = true;
+                    note.hitTime = currentTime;
+                    updateStats(0);
+                    m_latestJudgmentTrack = note.track;
+                    m_latestJudgmentTime = currentTime;
+                }
             }
         }
     }
@@ -98,26 +114,28 @@ void GameFramework::handleKeyPress(int track) {
         int judgment = judgeNote(closestNote->time, currentTime);
         if (judgment >= 0) {
             if (closestNote->type == 1 && closestNote->duration > 0.0) {
-                // hold 音符：按下时标记为正在按住，暂不结算
+                // hold 音符：按下时标记为正在按住，暂不结算，不显示判定
                 m_activeHoldIndex[track] = static_cast<int>(closestNote - &m_chart.notes[0]);
                 m_holdJudgment[track] = judgment;
-                m_latestJudgment = static_cast<Judgment>(3 - judgment);
-                m_latestJudgmentTime = currentTime;
                 // 不设 hit = true，等松开或自动结束时再设
             } else {
                 // tap 音符：直接结算
                 closestNote->hit = true;
+                closestNote->hitTime = currentTime;
                 updateStats(judgment);
+                m_latestJudgmentTrack = track;
                 m_latestJudgmentTime = currentTime;
             }
         } else {
             // 空按惩罚：按键离最近音符太远，算 Miss
             updateStats(0);
+            m_latestJudgmentTrack = track;
             m_latestJudgmentTime = currentTime;
         }
     } else {
         // 空按惩罚：轨道上没有未击中音符，算 Miss
         updateStats(0);
+        m_latestJudgmentTrack = track;
         m_latestJudgmentTime = currentTime;
     }
 }
@@ -135,12 +153,16 @@ void GameFramework::handleKeyRelease(int track) {
         // 如果接近结束（0.05s 内），视为完整 hold
         if (currentTime >= holdEndTime - 0.05) {
             note.hit = true;
+            note.hitTime = currentTime;
             updateStats(m_holdJudgment[track]);
+            m_latestJudgmentTrack = track;
             m_latestJudgmentTime = currentTime;
         } else {
             // 提前松开，算 Miss
             note.hit = true;
+            note.hitTime = currentTime;
             updateStats(0);
+            m_latestJudgmentTrack = track;
             m_latestJudgmentTime = currentTime;
         }
 
@@ -213,8 +235,16 @@ void GameFramework::resetStats() {
     m_stats.maxCombo = 0;
     m_latestJudgment = Judgment::None;
     m_latestJudgmentTime = 0.0;
+    m_latestJudgmentTrack = -1;
     m_activeHoldIndex = std::vector<int>(4, -1);
     m_holdJudgment = std::vector<int>(4, 0);
+}
+
+bool GameFramework::isNoteBeingHeld(int noteIndex) const {
+    for (int i = 0; i < 4; i++) {
+        if (m_activeHoldIndex[i] == noteIndex) return true;
+    }
+    return false;
 }
 
 double GameFramework::getMusicTime() const {

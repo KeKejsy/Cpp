@@ -195,6 +195,7 @@ Chart BeatDetector::generate(const std::string& audioFilePath) {
         note.duration = beatDurations[i];
         note.type = (note.duration > 0.0f) ? 1 : 0;
         note.hit = false;
+        note.hitTime = 0.0;
         lastLane = note.track;
         chart.notes.push_back(note);
     }

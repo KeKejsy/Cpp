@@ -5,6 +5,7 @@
 #include <sstream>
 #include <cmath>
 #include <cstdint>
+#include <algorithm>
 #include "GameFramework.h"
 #include "AssetManager.hpp"
 
@@ -14,9 +15,11 @@ public:
         : m_window(window)
         , m_font(font)
         , m_finished(false)
-        , m_judgmentDisplayTimer(0.0f)
         , m_comboScaleTimer(0.0f)
-        , m_comboScale(1.0f) {
+        , m_comboScale(1.0f)
+        , m_trackJudgmentTimer(4, 0.0f)
+        , m_trackJudgmentText(4, "")
+        , m_trackJudgmentColor(4, sf::Color::White) {
         setupUI();
     }
 
@@ -27,7 +30,7 @@ public:
     void start() {
         m_game.startGame();
         m_finished = false;
-        m_judgmentDisplayTimer = 0.0f;
+        std::fill(m_trackJudgmentTimer.begin(), m_trackJudgmentTimer.end(), 0.0f);
     }
 
     void handleEvent(const sf::Event& event) {
@@ -58,44 +61,67 @@ public:
         } else if (m_game.getState() == GameState::Result && !m_finished) {
             m_finished = true;
         }
-        
-        if (m_judgmentDisplayTimer > 0.0f) {
-            m_judgmentDisplayTimer -= deltaTime;
+
+        // 更新每个轨道的判定显示计时器
+        for (int i = 0; i < 4; i++) {
+            if (m_trackJudgmentTimer[i] > 0.0f) {
+                m_trackJudgmentTimer[i] -= deltaTime;
+            }
         }
-        
+
         if (m_comboScaleTimer > 0.0f) {
             m_comboScaleTimer -= deltaTime;
             m_comboScale = 1.0f + (m_comboScaleTimer * 2.0f);
             if (m_comboScale < 1.0f) m_comboScale = 1.0f;
         }
-        
+
+        // 检测新的判定，设置对应轨道的显示
         Judgment latest = m_game.getLatestJudgment();
-        if (latest != Judgment::None) {
-            switch (latest) {
-                case Judgment::Perfect:
-                    m_currentJudgmentText = "PERFECT!";
-                    m_currentJudgmentColor = sf::Color::Yellow;
-                    m_judgmentDisplayTimer = 0.5f;
-                    m_comboScaleTimer = 0.2f;
-                    break;
-                case Judgment::Great:
-                    m_currentJudgmentText = "GREAT!";
-                    m_currentJudgmentColor = sf::Color::Green;
-                    m_judgmentDisplayTimer = 0.4f;
-                    m_comboScaleTimer = 0.15f;
-                    break;
-                case Judgment::Good:
-                    m_currentJudgmentText = "GOOD";
-                    m_currentJudgmentColor = sf::Color::Blue;
-                    m_judgmentDisplayTimer = 0.3f;
-                    break;
-                case Judgment::Miss:
-                    m_currentJudgmentText = "MISS";
-                    m_currentJudgmentColor = sf::Color::Red;
-                    m_judgmentDisplayTimer = 0.3f;
-                    break;
-                default:
-                    break;
+        double latestTime = m_game.getLatestJudgmentTime();
+        int track = m_game.getLatestJudgmentTrack();
+
+        if (latest != Judgment::None && track >= 0 && track < 4) {
+            // 只处理新的判定（时间戳变化）
+            static double s_lastJudgmentTime = -1.0;
+            if (latestTime != s_lastJudgmentTime) {
+                s_lastJudgmentTime = latestTime;
+                sf::Color trackColor = m_tracks[track].color;
+
+                switch (latest) {
+                    case Judgment::Perfect:
+                        m_trackJudgmentText[track] = "PERFECT!";
+                        m_trackJudgmentColor[track] = sf::Color(
+                            std::min(255, trackColor.r + 150),
+                            std::min(255, trackColor.g + 150),
+                            std::min(255, trackColor.b + 150));
+                        m_trackJudgmentTimer[track] = 0.5f;
+                        m_comboScaleTimer = 0.2f;
+                        break;
+                    case Judgment::Great:
+                        m_trackJudgmentText[track] = "GREAT!";
+                        m_trackJudgmentColor[track] = sf::Color(
+                            std::min(255, trackColor.r + 80),
+                            std::min(255, trackColor.g + 80),
+                            std::min(255, trackColor.b + 80));
+                        m_trackJudgmentTimer[track] = 0.4f;
+                        m_comboScaleTimer = 0.15f;
+                        break;
+                    case Judgment::Good:
+                        m_trackJudgmentText[track] = "GOOD";
+                        m_trackJudgmentColor[track] = trackColor;
+                        m_trackJudgmentTimer[track] = 0.3f;
+                        break;
+                    case Judgment::Miss:
+                        m_trackJudgmentText[track] = "MISS";
+                        m_trackJudgmentColor[track] = sf::Color(
+                            std::max(0, trackColor.r - 50),
+                            std::max(0, trackColor.g - 50),
+                            std::max(0, trackColor.b - 50));
+                        m_trackJudgmentTimer[track] = 0.3f;
+                        break;
+                    default:
+                        break;
+                }
             }
         }
     }
@@ -116,7 +142,7 @@ public:
         if (m_game.isPlaying()) {
             drawNotes();
         }
-        
+
         drawUI();
         drawJudgment();
     }
@@ -161,10 +187,17 @@ private:
         const auto& notes = m_game.getNotes();
 
         for (const auto& note : notes) {
-            if (note.hit) continue;
+            // tap 音符：被击中后 0.3s 消失
+            if (note.type != 1 && note.hit && currentTime - note.hitTime > 0.3) continue;
 
             double timeDiff = note.time - currentTime;
-            if (timeDiff < -0.5f || timeDiff > 3.0f) continue;
+            // tap 音符超出范围跳过；hold 音符由渲染条件自行裁剪
+            if (note.type != 1 && (timeDiff < -0.5f || timeDiff > 3.0f)) continue;
+            // hold 音符：只在完全超出可见范围时跳过
+            if (note.type == 1) {
+                double endTimeDiff = (note.time + note.duration) - currentTime;
+                if (timeDiff > 3.0f || endTimeDiff < -0.3f) continue;
+            }
 
             float noteX = m_trackStartX + note.track * (m_trackWidth + 10.0f) + 10.0f;
             float noteWidth = m_trackWidth - 20.0f;
@@ -176,25 +209,34 @@ private:
                 double endTimeDiff = (note.time + note.duration) - currentTime;
                 float noteTailY = m_trackY - static_cast<float>(endTimeDiff * 200.0);
 
-                // 长条至少要有一定高度
-                float holdHeight = noteHeadY - noteTailY;
-                if (holdHeight < 10.0f) holdHeight = 10.0f;
+                // 裁剪：头部超出底部时截断，尾部超出顶部时截断
+                float drawTop = noteTailY;
+                float drawBottom = noteHeadY;
+                if (drawTop < 50.0f) drawTop = 50.0f;
+                if (drawBottom > m_trackY + 50.0f) drawBottom = m_trackY + 50.0f;
 
-                // 只在可见范围内绘制
-                if (noteTailY < m_trackY + 50.0f && noteHeadY > 50.0f) {
-                    // 绘制长条（半透明）
+                float holdHeight = drawBottom - drawTop;
+                if (holdHeight < 1.0f) holdHeight = 1.0f;
+
+                // 只在可见范围内绘制（尾部还没超出底部）
+                if (noteTailY < m_trackY + 50.0f && drawBottom > drawTop) {
+                    int noteIndex = static_cast<int>(&note - &notes[0]);
+                    bool isBeingHeld = m_game.isNoteBeingHeld(noteIndex);
+
+                    std::uint8_t barAlpha = isBeingHeld ? 200 : 100;
+                    std::uint8_t headAlpha = isBeingHeld ? 255 : 180;
+
+                    // 绘制长条（裁剪后的可见部分）
                     sf::RectangleShape holdBar(sf::Vector2f(noteWidth, holdHeight));
-                    holdBar.setPosition(sf::Vector2f(noteX, noteTailY));
-                    sf::Color holdColor = trackColor;
-                    holdColor.a = 100;  // 半透明
-                    holdBar.setFillColor(holdColor);
+                    holdBar.setPosition(sf::Vector2f(noteX, drawTop));
+                    holdBar.setFillColor(sf::Color(trackColor.r, trackColor.g, trackColor.b, barAlpha));
                     m_window.draw(holdBar);
 
-                    // 绘制 hold 音符头部（实色，和 tap 一样大）
+                    // 绘制 hold 音符头部（在可见范围内时）
                     if (noteHeadY >= 50.0f && noteHeadY <= m_trackY + 50.0f) {
                         sf::RectangleShape noteShape(sf::Vector2f(noteWidth, 30.0f));
                         noteShape.setPosition(sf::Vector2f(noteX, noteHeadY - 15.0f));
-                        noteShape.setFillColor(trackColor);
+                        noteShape.setFillColor(sf::Color(trackColor.r, trackColor.g, trackColor.b, headAlpha));
                         m_window.draw(noteShape);
                     }
                 }
@@ -245,35 +287,43 @@ private:
     }
 
     void drawJudgment() {
-        if (m_judgmentDisplayTimer > 0.0f && !m_currentJudgmentText.empty()) {
-            sf::Text judgmentText(m_font, m_currentJudgmentText, 40);
-            judgmentText.setFillColor(m_currentJudgmentColor);
-            
-            sf::FloatRect bounds = judgmentText.getLocalBounds();
-            judgmentText.setOrigin(sf::Vector2f(bounds.size.x / 2.0f, bounds.size.y / 2.0f));
-            judgmentText.setPosition(sf::Vector2f(400.0f, m_trackY - 80.0f));
-            
-            float offsetY = (0.5f - m_judgmentDisplayTimer) * 50.0f;
-            judgmentText.move(sf::Vector2f(0.0f, offsetY));
-            
-            m_window.draw(judgmentText);
+        for (int i = 0; i < 4; i++) {
+            if (m_trackJudgmentTimer[i] > 0.0f && !m_trackJudgmentText[i].empty()) {
+                sf::Text judgmentText(m_font, m_trackJudgmentText[i], 32);
+                judgmentText.setFillColor(m_trackJudgmentColor[i]);
+
+                sf::FloatRect bounds = judgmentText.getLocalBounds();
+                judgmentText.setOrigin(sf::Vector2f(bounds.size.x / 2.0f, bounds.size.y / 2.0f));
+
+                // 每个轨道判定显示在对应轨道的判定线上方
+                float trackCenterX = m_tracks[i].x + m_tracks[i].width / 2.0f;
+                judgmentText.setPosition(sf::Vector2f(trackCenterX, m_trackY - 60.0f));
+
+                // 向上飘动效果
+                float progress = 1.0f - (m_trackJudgmentTimer[i] / 0.5f);
+                float offsetY = progress * 30.0f;
+                judgmentText.move(sf::Vector2f(0.0f, -offsetY));
+
+                m_window.draw(judgmentText);
+            }
         }
     }
 
     sf::RenderWindow& m_window;
     sf::Font& m_font;
     GameFramework m_game;
-    
+
     std::vector<TrackConfig> m_tracks;
     float m_trackStartX;
     float m_trackWidth;
     float m_trackY;
     bool m_finished;
-    
-    float m_judgmentDisplayTimer;
-    std::string m_currentJudgmentText;
-    sf::Color m_currentJudgmentColor;
-    
+
     float m_comboScaleTimer;
     float m_comboScale;
+
+    // 每个轨道独立的判定显示
+    std::vector<float> m_trackJudgmentTimer;
+    std::vector<std::string> m_trackJudgmentText;
+    std::vector<sf::Color> m_trackJudgmentColor;
 };
