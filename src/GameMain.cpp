@@ -76,6 +76,7 @@ int main() {
     sf::Clock clock;
     std::future<Chart> detectionFuture;
     std::string pendingMusicPath;
+    Difficulty currentDifficulty = Difficulty::Normal;
     
     while (window.isOpen()) {
         while (const auto event = window.pollEvent()) {
@@ -94,8 +95,9 @@ int main() {
                             std::cout << "=== Auto Chart Generator ===" << std::endl;
                             std::cout << "Loading: " << musicPath << std::endl;
                             pendingMusicPath = musicPath;
+                            currentDifficulty = Difficulty::Normal;
                             detectionFuture = std::async(std::launch::async, [musicPath]() {
-                                BeatDetector detector;
+                                BeatDetector detector(Difficulty::Normal);
                                 return detector.generate(musicPath);
                             });
                             state = AppState::Loading;
@@ -121,7 +123,23 @@ int main() {
                 case AppState::Confirm: {
                     ConfirmResult confirmResult = confirm.handleEvent(*event);
                     if (confirmResult == ConfirmResult::StartGame) {
-                        game.loadChart(confirm.getChart(), confirm.getMusicPath());
+                        Difficulty selectedDifficulty = confirm.getDifficulty();
+                        if (selectedDifficulty != currentDifficulty) {
+                            // 难度变更，用新难度重新生成谱面（同步，FFT 很快）
+                            std::cout << "[GameMain] Difficulty changed, regenerating..." << std::endl;
+                            currentDifficulty = selectedDifficulty;
+                            BeatDetector detector(currentDifficulty);
+                            Chart regenerated = detector.generate(pendingMusicPath);
+                            if (!regenerated.notes.empty()) {
+                                confirm.setChart(regenerated, pendingMusicPath);
+                                game.loadChart(regenerated, pendingMusicPath);
+                            } else {
+                                // 降级：用已有谱面
+                                game.loadChart(confirm.getChart(), pendingMusicPath);
+                            }
+                        } else {
+                            game.loadChart(confirm.getChart(), pendingMusicPath);
+                        }
                         game.start();
                         state = AppState::Game;
                     } else if (confirmResult == ConfirmResult::Back) {

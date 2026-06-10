@@ -19,8 +19,13 @@ public:
         : m_window(window)
         , m_font(font)
         , m_selectedIndex(0)
+        , m_difficultyIndex(1)     // 默认 Normal
         , m_titleText(font, "Chart Ready!", 40)
-        , m_infoText(font, "", 22) {
+        , m_infoText(font, "", 22)
+        , m_difficultyLabel(font, "Difficulty:", 24)
+        , m_difficultyValue(font, "", 28)
+        , m_diffLeftArrow(font, "<", 28)
+        , m_diffRightArrow(font, ">", 28) {
         setupUI();
     }
 
@@ -44,34 +49,79 @@ public:
         int minutes = static_cast<int>(chart.duration) / 60;
         int seconds = static_cast<int>(chart.duration) % 60;
 
+        // 每轨道音符分布
+        int trackCounts[4] = {0, 0, 0, 0};
+        for (const auto& note : chart.notes) {
+            if (note.track >= 0 && note.track < 4) {
+                trackCounts[note.track]++;
+            }
+        }
+
         std::stringstream ss;
         ss << "Song: " << chart.songName << "\n\n";
         ss << "BPM: " << std::fixed << std::setprecision(1) << chart.bpm << " (estimated)\n";
         ss << "Duration: " << minutes << ":" << std::setw(2) << std::setfill('0') << seconds << "\n\n";
         ss << "Total Notes: " << totalNotes << "\n";
         ss << "  Tap:  " << tapCount << "\n";
-        ss << "  Hold: " << holdCount;
+        ss << "  Hold: " << holdCount << "\n\n";
+        ss << "Per Track:\n";
+        ss << "  D (Bass):  " << trackCounts[0] << "\n";
+        ss << "  F (LoMid): " << trackCounts[1] << "\n";
+        ss << "  J (HiMid): " << trackCounts[2] << "\n";
+        ss << "  K (High):  " << trackCounts[3];
 
         m_infoText.setString(ss.str());
     }
 
     const Chart& getChart() const { return m_chart; }
     const std::string& getMusicPath() const { return m_musicPath; }
+    Difficulty getDifficulty() const {
+        return static_cast<Difficulty>(m_difficultyIndex);
+    }
 
     ConfirmResult handleEvent(const sf::Event& event) {
         if (const auto* keyEvent = event.getIf<sf::Event::KeyPressed>()) {
             switch (keyEvent->code) {
-                case sf::Keyboard::Key::Left:
-                    m_selectedIndex = (m_selectedIndex - 1 + 2) % 2;
+                case sf::Keyboard::Key::Up:
+                    if (m_selectedIndex == 0) {
+                        // 在 Start/Back 按钮时，按上跳到难度选择
+                        m_selectedIndex = 2;  // difficulty row
+                    } else if (m_selectedIndex == 2) {
+                        m_selectedIndex = 2;  // 已经在难度行
+                    } else {
+                        m_selectedIndex = (m_selectedIndex - 1 + 3) % 3;
+                    }
                     updateSelection();
                     break;
-                case sf::Keyboard::Key::Right:
-                    m_selectedIndex = (m_selectedIndex + 1) % 2;
+                case sf::Keyboard::Key::Down:
+                    if (m_selectedIndex == 2) {
+                        m_selectedIndex = 0;  // 从难度跳到按钮
+                    } else {
+                        m_selectedIndex = (m_selectedIndex + 1) % 3;
+                    }
                     updateSelection();
+                    break;
+                case sf::Keyboard::Key::Left:
+                    if (m_selectedIndex == 2) {
+                        // 降低难度
+                        m_difficultyIndex = (m_difficultyIndex - 1 + 3) % 3;
+                        updateDifficultyDisplay();
+                    }
+                    break;
+                case sf::Keyboard::Key::Right:
+                    if (m_selectedIndex == 2) {
+                        // 提高难度
+                        m_difficultyIndex = (m_difficultyIndex + 1) % 3;
+                        updateDifficultyDisplay();
+                    }
                     break;
                 case sf::Keyboard::Key::Enter:
                 case sf::Keyboard::Key::Space:
-                    return m_buttons[m_selectedIndex].action;
+                    if (m_selectedIndex < 2) {
+                        return m_buttons[m_selectedIndex].action;
+                    }
+                    // 难度行不响应 Enter
+                    break;
                 default:
                     break;
             }
@@ -80,6 +130,7 @@ public:
         if (const auto* mouseEvent = event.getIf<sf::Event::MouseMoved>()) {
             sf::Vector2f mousePos(static_cast<float>(mouseEvent->position.x),
                                   static_cast<float>(mouseEvent->position.y));
+            // 检查按钮
             for (size_t i = 0; i < m_buttons.size(); i++) {
                 if (m_buttons[i].background.getGlobalBounds().contains(mousePos)) {
                     if (static_cast<int>(i) != m_selectedIndex) {
@@ -89,16 +140,36 @@ public:
                     break;
                 }
             }
+            // 检查难度选择器
+            if (m_diffLeftArrow.getGlobalBounds().contains(mousePos) ||
+                m_diffRightArrow.getGlobalBounds().contains(mousePos) ||
+                m_difficultyValue.getGlobalBounds().contains(mousePos)) {
+                if (m_selectedIndex != 2) {
+                    m_selectedIndex = 2;
+                    updateSelection();
+                }
+            }
         }
 
         if (const auto* mouseEvent = event.getIf<sf::Event::MouseButtonPressed>()) {
             if (mouseEvent->button == sf::Mouse::Button::Left) {
                 sf::Vector2f mousePos(static_cast<float>(mouseEvent->position.x),
                                       static_cast<float>(mouseEvent->position.y));
+                // 按钮点击
                 for (const auto& btn : m_buttons) {
                     if (btn.background.getGlobalBounds().contains(mousePos)) {
                         return btn.action;
                     }
+                }
+                // 难度左箭头
+                if (m_diffLeftArrow.getGlobalBounds().contains(mousePos)) {
+                    m_difficultyIndex = (m_difficultyIndex - 1 + 3) % 3;
+                    updateDifficultyDisplay();
+                }
+                // 难度右箭头
+                if (m_diffRightArrow.getGlobalBounds().contains(mousePos)) {
+                    m_difficultyIndex = (m_difficultyIndex + 1) % 3;
+                    updateDifficultyDisplay();
                 }
             }
         }
@@ -114,6 +185,12 @@ public:
         m_window.draw(m_background);
         m_window.draw(m_titleText);
         m_window.draw(m_infoText);
+
+        // 难度选择器
+        m_window.draw(m_difficultyLabel);
+        m_window.draw(m_difficultyValue);
+        m_window.draw(m_diffLeftArrow);
+        m_window.draw(m_diffRightArrow);
 
         for (const auto& btn : m_buttons) {
             m_window.draw(btn.background);
@@ -145,13 +222,36 @@ private:
         m_titleText.setFillColor(sf::Color::Cyan);
         m_titleText.setStyle(sf::Text::Bold);
         sf::FloatRect titleBounds = m_titleText.getLocalBounds();
-        m_titleText.setPosition(sf::Vector2f(centerX - titleBounds.size.x / 2.0f, 50.0f));
+        m_titleText.setPosition(sf::Vector2f(centerX - titleBounds.size.x / 2.0f, 30.0f));
 
-        // 信息文字
+        // 信息文字（左移给难度选择器留空间）
         m_infoText.setFillColor(sf::Color(220, 220, 240));
-        m_infoText.setPosition(sf::Vector2f(centerX - 250.0f, 150.0f));
+        m_infoText.setPosition(sf::Vector2f(centerX - 280.0f, 95.0f));
 
-        // 按钮
+        // ---- 难度选择器 ----
+        float diffY = 430.0f;
+        m_difficultyLabel.setFillColor(sf::Color(180, 180, 200));
+        m_difficultyLabel.setPosition(sf::Vector2f(centerX - 160.0f, diffY));
+
+        m_diffLeftArrow.setFont(m_font);
+        m_diffLeftArrow.setString("<");
+        m_diffLeftArrow.setCharacterSize(28);
+        m_diffLeftArrow.setFillColor(sf::Color::White);
+        m_diffLeftArrow.setPosition(sf::Vector2f(centerX + 20.0f, diffY - 3.0f));
+
+        m_difficultyValue.setFillColor(sf::Color::Yellow);
+        m_difficultyValue.setStyle(sf::Text::Bold);
+        m_difficultyValue.setPosition(sf::Vector2f(centerX + 55.0f, diffY - 2.0f));
+
+        m_diffRightArrow.setFont(m_font);
+        m_diffRightArrow.setString(">");
+        m_diffRightArrow.setCharacterSize(28);
+        m_diffRightArrow.setFillColor(sf::Color::White);
+        m_diffRightArrow.setPosition(sf::Vector2f(centerX + 175.0f, diffY - 3.0f));
+
+        updateDifficultyDisplay();
+
+        // ---- 按钮 ----
         struct ButtonData {
             const char* label;
             ConfirmResult action;
@@ -191,6 +291,23 @@ private:
         updateSelection();
     }
 
+    void updateDifficultyDisplay() {
+        static const char* names[] = {"Easy", "Normal", "Hard"};
+        static sf::Color colors[] = {
+            sf::Color(100, 255, 100),   // Easy: green
+            sf::Color(255, 255, 100),   // Normal: yellow
+            sf::Color(255, 100, 100)    // Hard: red
+        };
+
+        m_difficultyValue.setString(names[m_difficultyIndex]);
+        m_difficultyValue.setFillColor(colors[m_difficultyIndex]);
+
+        // 居中文本
+        sf::FloatRect bounds = m_difficultyValue.getLocalBounds();
+        float centerX = static_cast<float>(m_window.getSize().x) / 2.0f;
+        m_difficultyValue.setPosition(sf::Vector2f(centerX + 55.0f, 428.0f));
+    }
+
     void updateSelection() {
         for (size_t i = 0; i < m_buttons.size(); i++) {
             if (static_cast<int>(i) == m_selectedIndex) {
@@ -205,6 +322,17 @@ private:
                 m_buttons[i].text.setFillColor(sf::Color::White);
             }
         }
+
+        // 难度行高亮
+        if (m_selectedIndex == 2) {
+            m_difficultyLabel.setFillColor(sf::Color::Yellow);
+            m_diffLeftArrow.setFillColor(sf::Color::Yellow);
+            m_diffRightArrow.setFillColor(sf::Color::Yellow);
+        } else {
+            m_difficultyLabel.setFillColor(sf::Color(180, 180, 200));
+            m_diffLeftArrow.setFillColor(sf::Color::White);
+            m_diffRightArrow.setFillColor(sf::Color::White);
+        }
     }
 
     sf::RenderWindow& m_window;
@@ -213,8 +341,13 @@ private:
     std::string m_musicPath;
     std::vector<Button> m_buttons;
     int m_selectedIndex;
+    int m_difficultyIndex;  // 0=Easy, 1=Normal, 2=Hard
 
     sf::Text m_titleText;
     sf::Text m_infoText;
+    sf::Text m_difficultyLabel;
+    sf::Text m_difficultyValue;
+    sf::Text m_diffLeftArrow;
+    sf::Text m_diffRightArrow;
     sf::RectangleShape m_background;
 };

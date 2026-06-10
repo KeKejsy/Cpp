@@ -66,12 +66,23 @@ void GameFramework::update(double currentTime) {
         if (!note.hit) {
             if (note.type == 1 && note.duration > 0.0) {
                 // hold 音符：尾部到达判定线时才 miss
+                // 安全检查：如果正被按住，由 auto-complete 处理，这里不抢
                 if (currentTime >= note.time + note.duration) {
-                    note.hit = true;
-                    note.hitTime = currentTime;
-                    updateStats(0);
-                    m_latestJudgmentTrack = note.track;
-                    m_latestJudgmentTime = currentTime;
+                    int noteIdx = static_cast<int>(&note - &m_chart.notes[0]);
+                    bool isActive = false;
+                    for (int t = 0; t < 4; t++) {
+                        if (m_activeHoldIndex[t] == noteIdx) {
+                            isActive = true;
+                            break;
+                        }
+                    }
+                    if (!isActive) {
+                        note.hit = true;
+                        note.hitTime = currentTime;
+                        updateStats(0);
+                        m_latestJudgmentTrack = note.track;
+                        m_latestJudgmentTime = currentTime;
+                    }
                 }
             } else {
                 // tap 音符：超出判定窗口 miss（250ms = 37.5px，明显超出 Good 窗口）
@@ -151,18 +162,36 @@ void GameFramework::handleKeyRelease(int track) {
     int holdIdx = m_activeHoldIndex[track];
     if (holdIdx >= 0) {
         Note& note = m_chart.notes[holdIdx];
+
+        // 防御：如果 auto-complete 已经处理过，跳过
+        if (note.hit) {
+            m_activeHoldIndex[track] = -1;
+            m_holdJudgment[track] = 0;
+            return;
+        }
         double currentTime = getMusicTime();
         double holdEndTime = note.time + note.duration;
+        double heldDuration = currentTime - note.time;
+        double totalDuration = note.duration;
 
-        // 如果接近结束（0.05s 内），视为完整 hold
-        if (currentTime >= holdEndTime - 0.05) {
+        // 接近结尾（0.10s 窗口）→ 完整分数，使用初始按下时的判定
+        if (currentTime >= holdEndTime - 0.10) {
             note.hit = true;
             note.hitTime = currentTime;
             updateStats(m_holdJudgment[track]);
             m_latestJudgmentTrack = track;
             m_latestJudgmentTime = currentTime;
-        } else {
-            // 提前松开，算 Miss
+        }
+        // 按住超过 60% 时长 → 部分分数（Good），保留连击
+        else if (totalDuration > 0.0 && heldDuration >= totalDuration * 0.6) {
+            note.hit = true;
+            note.hitTime = currentTime;
+            updateStats(1);  // Good — 惩罚提前松手但非完全失败
+            m_latestJudgmentTrack = track;
+            m_latestJudgmentTime = currentTime;
+        }
+        // 按住不足 60% → Miss
+        else {
             note.hit = true;
             note.hitTime = currentTime;
             updateStats(0);
@@ -209,16 +238,19 @@ void GameFramework::updateStats(int judgment) {
             m_stats.perfectCount++;
             m_stats.totalScore += 300;
             m_stats.combo++;
+            m_latestJudgment = Judgment::Perfect;
             break;
         case 2:
             m_stats.greatCount++;
             m_stats.totalScore += 200;
             m_stats.combo++;
+            m_latestJudgment = Judgment::Great;
             break;
         case 1:
             m_stats.goodCount++;
             m_stats.totalScore += 100;
             m_stats.combo++;
+            m_latestJudgment = Judgment::Good;
             break;
         case 0:
             m_stats.missCount++;

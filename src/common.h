@@ -3,6 +3,12 @@
 #include <string>
 #include <vector>
 
+enum class Difficulty {
+    Easy,
+    Normal,
+    Hard
+};
+
 struct Note {
     double time;
     int track;

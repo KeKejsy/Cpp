@@ -3,31 +3,71 @@
 #include "common.h"
 #include <cstdint>
 #include <string>
+#include <vector>
+#include <deque>
 
 // BeatDetector - 自动谱面生成器
-// 基于能量的节拍检测算法：分析音频 PCM 数据，检测节奏点，生成 Note 列表
+// 基于 FFT 频段能量分析：将音频按频率拆分为 4 个频段，每个频段独立检测节拍，
+// 频段直接映射到游戏轨道（低频→轨道0, 中低频→轨道1, 中高频→轨道2, 高频→轨道3）
 class BeatDetector {
 public:
     BeatDetector();
+    explicit BeatDetector(Difficulty difficulty);
 
     // 核心接口：传入音频文件路径，返回生成的 Chart
     Chart generate(const std::string& audioFilePath);
 
+    // 运行时调整难度
+    void setDifficulty(Difficulty difficulty);
+
 private:
-    // 计算一个窗口的能量（均方值）
-    // samples: PCM 采样数据指针
-    // startIdx: 窗口起始采样索引
-    // numSamples: 窗口内采样点数
-    // channelCount: 声道数
-    float computeWindowEnergy(const int16_t* samples, int startIdx,
-                              int numSamples, int channelCount);
+    // 频段状态：每个频段独立追踪能量历史和 hold 状态
+    struct BandState {
+        std::deque<float> energyHistory;
+        float historySum = 0.0f;
+        bool inHold = false;
+        float holdStartTime = 0.0f;
+        float lastBeatTime = -1.0f;
+        std::vector<float> beatTimes;
+        std::vector<float> beatDurations;
+    };
 
-    // 分配轨道：随机但避免连续相同
-    int assignLane(int lastLane);
+    // FFT: in-place radix-2 Cooley-Tukey (迭代实现)
+    void fft(std::vector<float>& real, std::vector<float>& imag);
 
-    // 可调参数
-    int m_windowSize;        // 窗口大小（采样点数），默认 1024
-    int m_historySize;       // 历史窗口数，默认 43（约 1 秒）
-    float m_threshold;       // 能量阈值倍数，默认 1.5
-    float m_minInterval;     // 最小节拍间隔（秒），默认 0.2
+    // 应用 Hann 窗，减少频谱泄漏
+    void applyHannWindow(std::vector<float>& samples);
+
+    // 从 FFT 结果计算 4 个频段的能量
+    // bandEdges[5] = {low, midLow, midHigh, high, nyquist} 频段边界频率 (Hz)
+    void computeBandEnergies(const std::vector<float>& real,
+                              const std::vector<float>& imag,
+                              float sampleRate,
+                              float bandEnergies[4]);
+
+    // 将立体声 int16 采样转换为单声道 float，返回有效采样数
+    int convertToMono(const int16_t* buffer, int numSamples, int channelCount,
+                      std::vector<float>& monoOut);
+
+    // 根据难度设置参数
+    void applyDifficulty();
+
+    // ---- 可调参数 ----
+    int m_windowSize;           // 窗口大小（采样点数），默认 1024
+    int m_historySize;          // 历史窗口数，默认 43（约 1 秒 @44100Hz）
+    float m_threshold;          // 能量阈值倍数
+    float m_minInterval;        // 最小节拍间隔（秒）
+    Difficulty m_difficulty;
+
+    // 频段边界 (Hz) — 4 个频段 → 4 个轨道
+    // Band 0: 20-200 Hz   → Track 0 (D)  低频：底鼓、贝斯
+    // Band 1: 200-800 Hz  → Track 1 (F)  中低频：钢琴低音、节奏吉他
+    // Band 2: 800-3000 Hz → Track 2 (J)  中高频：人声、主旋律
+    // Band 3: 3000+ Hz    → Track 3 (K)  高频：镲片、hi-hat
+    static constexpr float BAND_EDGES[5] = {20.0f, 200.0f, 800.0f, 3000.0f, 20000.0f};
+
+    // Hold 检测参数
+    static constexpr float SUSTAIN_RATIO = 0.25f;      // 持续阈值 = 平均能量 × 此值
+    static constexpr float MIN_HOLD_DURATION = 0.25f;   // 最短 hold 时长（秒）
+    static constexpr float ABSOLUTE_MIN_ENERGY = 0.0005f; // 绝对最小能量，避免静音误触
 };
