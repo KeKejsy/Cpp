@@ -12,6 +12,7 @@ find_path(MINGW_BIN_DIR NAMES "libstdc++-6.dll" PATHS "C:/msys64/ucrt64/bin" NO_
 add_executable(rhythm_master
     src/GameMain.cpp
     src/GameFramework.cpp
+    src/BeatDetector.cpp
 )
 
 target_link_libraries(rhythm_master
@@ -19,6 +20,7 @@ target_link_libraries(rhythm_master
     SFML::Audio
     SFML::Window
     SFML::System
+    comdlg32
 )
 
 # 构建后自动复制 DLL
