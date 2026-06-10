@@ -72,7 +72,11 @@ public:
             }
             // 倒计时期间不运行游戏逻辑
         } else if (m_phase == Phase::Playing && m_game.isPlaying()) {
+            // 先捕获按键产生的判定（handleEvent 中已设置），再运行 game update
+            processJudgmentDisplay();
             m_game.update(m_game.getMusicTime());
+            // 再捕获 auto-miss 等 update 内产生的判定
+            processJudgmentDisplay();
         }
 
         if (m_game.getState() == GameState::Result && !m_finished) {
@@ -92,55 +96,56 @@ public:
             m_comboScale = 1.0f + (m_comboScaleTimer * 2.0f);
             if (m_comboScale < 1.0f) m_comboScale = 1.0f;
         }
+    }
 
-        // 检测新的判定，设置对应轨道的显示
+    // 检测并显示最新的判定
+    void processJudgmentDisplay() {
         Judgment latest = m_game.getLatestJudgment();
         double latestTime = m_game.getLatestJudgmentTime();
         int track = m_game.getLatestJudgmentTrack();
 
-        if (latest != Judgment::None && track >= 0 && track < 4) {
-            // 只处理新的判定（时间戳变化）
-            static double s_lastJudgmentTime = -1.0;
-            if (latestTime != s_lastJudgmentTime) {
-                s_lastJudgmentTime = latestTime;
-                sf::Color trackColor = m_tracks[track].color;
+        if (latest == Judgment::None || track < 0 || track >= 4) return;
 
-                switch (latest) {
-                    case Judgment::Perfect:
-                        m_trackJudgmentText[track] = "PERFECT!";
-                        m_trackJudgmentColor[track] = sf::Color(
-                            std::min(255, trackColor.r + 150),
-                            std::min(255, trackColor.g + 150),
-                            std::min(255, trackColor.b + 150));
-                        m_trackJudgmentTimer[track] = 0.5f;
-                        m_comboScaleTimer = 0.2f;
-                        break;
-                    case Judgment::Great:
-                        m_trackJudgmentText[track] = "GREAT!";
-                        m_trackJudgmentColor[track] = sf::Color(
-                            std::min(255, trackColor.r + 80),
-                            std::min(255, trackColor.g + 80),
-                            std::min(255, trackColor.b + 80));
-                        m_trackJudgmentTimer[track] = 0.4f;
-                        m_comboScaleTimer = 0.15f;
-                        break;
-                    case Judgment::Good:
-                        m_trackJudgmentText[track] = "GOOD";
-                        m_trackJudgmentColor[track] = trackColor;
-                        m_trackJudgmentTimer[track] = 0.3f;
-                        break;
-                    case Judgment::Miss:
-                        m_trackJudgmentText[track] = "MISS";
-                        m_trackJudgmentColor[track] = sf::Color(
-                            std::max(0, trackColor.r - 50),
-                            std::max(0, trackColor.g - 50),
-                            std::max(0, trackColor.b - 50));
-                        m_trackJudgmentTimer[track] = 0.3f;
-                        break;
-                    default:
-                        break;
-                }
-            }
+        // 使用帧内时间戳去重，避免同一判定重复显示
+        if (latestTime == m_lastDisplayedJudgmentTime) return;
+        m_lastDisplayedJudgmentTime = latestTime;
+
+        sf::Color trackColor = m_tracks[track].color;
+
+        switch (latest) {
+            case Judgment::Perfect:
+                m_trackJudgmentText[track] = "PERFECT!";
+                m_trackJudgmentColor[track] = sf::Color(
+                    std::min(255, trackColor.r + 150),
+                    std::min(255, trackColor.g + 150),
+                    std::min(255, trackColor.b + 150));
+                m_trackJudgmentTimer[track] = 0.5f;
+                m_comboScaleTimer = 0.2f;
+                break;
+            case Judgment::Great:
+                m_trackJudgmentText[track] = "GREAT!";
+                m_trackJudgmentColor[track] = sf::Color(
+                    std::min(255, trackColor.r + 80),
+                    std::min(255, trackColor.g + 80),
+                    std::min(255, trackColor.b + 80));
+                m_trackJudgmentTimer[track] = 0.4f;
+                m_comboScaleTimer = 0.15f;
+                break;
+            case Judgment::Good:
+                m_trackJudgmentText[track] = "GOOD";
+                m_trackJudgmentColor[track] = trackColor;
+                m_trackJudgmentTimer[track] = 0.3f;
+                break;
+            case Judgment::Miss:
+                m_trackJudgmentText[track] = "MISS";
+                m_trackJudgmentColor[track] = sf::Color(
+                    std::max(0, trackColor.r - 50),
+                    std::max(0, trackColor.g - 50),
+                    std::max(0, trackColor.b - 50));
+                m_trackJudgmentTimer[track] = 0.3f;
+                break;
+            default:
+                break;
         }
     }
 
@@ -224,29 +229,67 @@ private:
         const auto& notes = m_game.getNotes();
 
         for (const auto& note : notes) {
-            // tap 音符：被击中后 0.3s 消失
-            if (note.type != 1 && note.hit && currentTime - note.hitTime > 0.3) continue;
-
-            double timeDiff = note.time - currentTime;
-            // tap 音符超出可见范围跳过
-            if (note.type != 1 && (timeDiff < -0.5f || timeDiff > m_visibleAhead)) continue;
-            // hold 音符：只在完全超出可见范围时跳过
-            if (note.type == 1) {
-                double endTimeDiff = (note.time + note.duration) - currentTime;
-                if (timeDiff > m_visibleAhead || endTimeDiff < -0.3f) continue;
-            }
-
             float noteX = m_trackStartX + note.track * (m_trackWidth + m_trackGap) + 10.0f;
             float noteWidth = m_trackWidth - 20.0f;
             sf::Color trackColor = m_tracks[note.track].color;
 
+            // ---- tap 音符 ----
+            if (note.type != 1) {
+                // 已被击中：冻结在判定线位置，短暂消失
+                if (note.hit) {
+                    double elapsed = currentTime - note.hitTime;
+                    if (elapsed > 0.25) continue;  // 0.25s 后消失
+
+                    float alpha = 1.0f - static_cast<float>(elapsed / 0.25);
+                    sf::Color fadeColor(trackColor.r, trackColor.g, trackColor.b,
+                                        static_cast<std::uint8_t>(180 * alpha));
+                    sf::RectangleShape noteShape(sf::Vector2f(noteWidth, 30.0f));
+                    noteShape.setPosition(sf::Vector2f(noteX, m_trackY));
+                    noteShape.setFillColor(fadeColor);
+                    m_window.draw(noteShape);
+                    continue;
+                }
+
+                // 未命中：按时间差计算位置
+                double timeDiff = note.time - currentTime;
+                if (timeDiff < -0.6f || timeDiff > m_visibleAhead) continue;
+
+                float noteY = m_trackY - static_cast<float>(timeDiff * m_noteSpeed);
+                if (noteY < m_trackTop || noteY > m_trackY + 60.0f) continue;
+
+                sf::RectangleShape noteShape(sf::Vector2f(noteWidth, 30.0f));
+                noteShape.setPosition(sf::Vector2f(noteX, noteY));
+                noteShape.setFillColor(trackColor);
+                m_window.draw(noteShape);
+                continue;
+            }
+
+            // ---- hold 音符 ----
             if (note.type == 1 && note.duration > 0.0) {
-                // hold 音符：渲染为长条矩形
-                float noteHeadY = m_trackY - static_cast<float>(timeDiff * m_noteSpeed);
+                double timeDiff = note.time - currentTime;
                 double endTimeDiff = (note.time + note.duration) - currentTime;
+
+                // 已被结算（完整完成或提前松开）：冻结头部在判定线，短时间消失
+                if (note.hit) {
+                    double elapsed = currentTime - note.hitTime;
+                    if (elapsed > 0.3) continue;
+
+                    float alpha = 1.0f - static_cast<float>(elapsed / 0.3);
+                    sf::Color fadeColor(trackColor.r, trackColor.g, trackColor.b,
+                                        static_cast<std::uint8_t>(150 * alpha));
+                    sf::RectangleShape noteShape(sf::Vector2f(noteWidth, 30.0f));
+                    noteShape.setPosition(sf::Vector2f(noteX, m_trackY - 15.0f));
+                    noteShape.setFillColor(fadeColor);
+                    m_window.draw(noteShape);
+                    continue;
+                }
+
+                if (timeDiff > m_visibleAhead || endTimeDiff < -0.5f) continue;
+
+                float noteHeadY = m_trackY - static_cast<float>(timeDiff * m_noteSpeed);
                 float noteTailY = m_trackY - static_cast<float>(endTimeDiff * m_noteSpeed);
 
-                // 裁剪：头部超出底部时截断，尾部超出顶部时截断
+                // 裁剪
                 float drawTop = noteTailY;
                 float drawBottom = noteHeadY;
                 float clipBottom = m_trackY + 50.0f;
@@ -256,7 +299,6 @@ private:
                 float holdHeight = drawBottom - drawTop;
                 if (holdHeight < 1.0f) holdHeight = 1.0f;
 
-                // 只在可见范围内绘制
                 if (noteTailY < clipBottom && drawBottom > drawTop) {
                     int noteIndex = static_cast<int>(&note - &notes[0]);
                     bool isBeingHeld = m_game.isNoteBeingHeld(noteIndex);
@@ -269,7 +311,6 @@ private:
                     holdBar.setFillColor(sf::Color(trackColor.r, trackColor.g, trackColor.b, barAlpha));
                     m_window.draw(holdBar);
 
-                    // 绘制 hold 音符头部
                     if (noteHeadY >= m_trackTop && noteHeadY <= clipBottom) {
                         sf::RectangleShape noteShape(sf::Vector2f(noteWidth, 30.0f));
                         noteShape.setPosition(sf::Vector2f(noteX, noteHeadY - 15.0f));
@@ -277,15 +318,6 @@ private:
                         m_window.draw(noteShape);
                     }
                 }
-            } else {
-                // tap 音符
-                float noteY = m_trackY - static_cast<float>(timeDiff * m_noteSpeed);
-                if (noteY < m_trackTop || noteY > m_trackY + 50.0f) continue;
-
-                sf::RectangleShape noteShape(sf::Vector2f(noteWidth, 30.0f));
-                noteShape.setPosition(sf::Vector2f(noteX, noteY));
-                noteShape.setFillColor(trackColor);
-                m_window.draw(noteShape);
             }
         }
     }
@@ -411,4 +443,5 @@ private:
     std::vector<float> m_trackJudgmentTimer;
     std::vector<std::string> m_trackJudgmentText;
     std::vector<sf::Color> m_trackJudgmentColor;
+    double m_lastDisplayedJudgmentTime = -1.0;
 };

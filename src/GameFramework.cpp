@@ -74,8 +74,8 @@ void GameFramework::update(double currentTime) {
                     m_latestJudgmentTime = currentTime;
                 }
             } else {
-                // tap 音符：超出判定窗口 miss
-                if (currentTime - note.time > 0.15) {
+                // tap 音符：超出判定窗口 miss（250ms = 37.5px，明显超出 Good 窗口）
+                if (currentTime - note.time > 0.250) {
                     note.hit = true;
                     note.hitTime = currentTime;
                     updateStats(0);
@@ -97,7 +97,7 @@ void GameFramework::handleKeyPress(int track) {
 
     Note* closestNote = nullptr;
     double closestTime = 1000.0;
-    const double MAX_SEARCH_WINDOW = 0.25;  // 只搜 ±250ms 内的音符
+    const double MAX_SEARCH_WINDOW = 0.28;  // 只搜 ±280ms 内的音符（略大于判定窗口）
 
     for (auto& note : m_chart.notes) {
         if (note.hit || note.track != track) {
@@ -183,16 +183,19 @@ void GameFramework::endGame() {
 int GameFramework::judgeNote(double noteTime, double currentTime) {
     double diff = std::abs(currentTime - noteTime);
 
-    // 浮点精度容差（1e-9），避免 0.10 被判为 > 0.10 的情况
+    // 浮点精度容差（1e-9），避免边界值误判
     const double eps = 1e-9;
 
-    if (diff <= 0.05 + eps) {
+    // 判定窗口（毫秒 -> 像素距离 @150px/s）：
+    // Perfect: 60ms / 9px   Great: 130ms / 19.5px   Good: 200ms / 30px
+    // 窗口略大于音符高度(30px)，确保视觉上重叠时能命中
+    if (diff <= 0.060 + eps) {
         m_latestJudgment = Judgment::Perfect;
         return 3;
-    } else if (diff <= 0.10 + eps) {
+    } else if (diff <= 0.130 + eps) {
         m_latestJudgment = Judgment::Great;
         return 2;
-    } else if (diff <= 0.15 + eps) {
+    } else if (diff <= 0.200 + eps) {
         m_latestJudgment = Judgment::Good;
         return 1;
     }
