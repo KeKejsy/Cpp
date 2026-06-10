@@ -97,6 +97,7 @@ void GameFramework::handleKeyPress(int track) {
 
     Note* closestNote = nullptr;
     double closestTime = 1000.0;
+    const double MAX_SEARCH_WINDOW = 0.25;  // 只搜 ±250ms 内的音符
 
     for (auto& note : m_chart.notes) {
         if (note.hit || note.track != track) {
@@ -104,37 +105,40 @@ void GameFramework::handleKeyPress(int track) {
         }
 
         double diff = std::abs(currentTime - note.time);
-        if (diff < closestTime) {
+        if (diff < closestTime && diff <= MAX_SEARCH_WINDOW) {
             closestTime = diff;
             closestNote = &note;
         }
     }
 
-    if (closestNote) {
-        int judgment = judgeNote(closestNote->time, currentTime);
-        if (judgment >= 0) {
-            if (closestNote->type == 1 && closestNote->duration > 0.0) {
-                // hold 音符：按下时标记为正在按住，暂不结算，不显示判定
-                m_activeHoldIndex[track] = static_cast<int>(closestNote - &m_chart.notes[0]);
-                m_holdJudgment[track] = judgment;
-                // 不设 hit = true，等松开或自动结束时再设
-            } else {
-                // tap 音符：直接结算
-                closestNote->hit = true;
-                closestNote->hitTime = currentTime;
-                updateStats(judgment);
-                m_latestJudgmentTrack = track;
-                m_latestJudgmentTime = currentTime;
-            }
-        } else {
-            // 空按惩罚：按键离最近音符太远，算 Miss
-            updateStats(0);
-            m_latestJudgmentTrack = track;
-            m_latestJudgmentTime = currentTime;
-        }
-    } else {
-        // 空按惩罚：轨道上没有未击中音符，算 Miss
+    if (!closestNote) {
+        // 轨道上附近无音符，空按惩罚
         updateStats(0);
+        m_latestJudgmentTrack = track;
+        m_latestJudgmentTime = currentTime;
+        return;
+    }
+
+    int judgment = judgeNote(closestNote->time, currentTime);
+    if (judgment < 0) {
+        // 超出判定窗口：空按惩罚，同时标记音符避免 auto-miss 双重扣分
+        closestNote->hit = true;
+        closestNote->hitTime = currentTime;
+        updateStats(0);
+        m_latestJudgmentTrack = track;
+        m_latestJudgmentTime = currentTime;
+        return;
+    }
+
+    if (closestNote->type == 1 && closestNote->duration > 0.0) {
+        // hold 音符：按下时标记为正在按住，暂不结算
+        m_activeHoldIndex[track] = static_cast<int>(closestNote - &m_chart.notes[0]);
+        m_holdJudgment[track] = judgment;
+    } else {
+        // tap 音符：直接结算
+        closestNote->hit = true;
+        closestNote->hitTime = currentTime;
+        updateStats(judgment);
         m_latestJudgmentTrack = track;
         m_latestJudgmentTime = currentTime;
     }

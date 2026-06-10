@@ -148,7 +148,7 @@ private:
         sf::FloatRect titleBounds = m_titleText.getLocalBounds();
         m_titleText.setPosition(sf::Vector2f(
             centerX - titleBounds.size.x / 2.0f,
-            80.0f
+            100.0f
         ));
         
         struct ItemData {
@@ -159,7 +159,7 @@ private:
             {"Exit", MenuResult::Exit}
         };
         
-        float startY = 250.0f;
+        float startY = 300.0f;
         float itemSpacing = 80.0f;
         float itemWidth = 250.0f;
         float itemHeight = 60.0f;

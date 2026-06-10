@@ -6,6 +6,9 @@
 #include "GameScene.hpp"
 #include "ResultScene.hpp"
 #include "BeatDetector.h"
+#include <future>
+#include "LoadingScene.hpp"
+#include "ConfirmScene.hpp"
 
 // Win32 文件选择对话框
 #include <windows.h>
@@ -34,7 +37,7 @@ std::string openFileDialog() {
 }
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode({800, 600}), "Rhythm Master");
+    sf::RenderWindow window(sf::VideoMode({1280, 720}), "Rhythm Master");
     window.setFramerateLimit(60);
     
     sf::Font& font = AssetManager::getInstance().getFont();
@@ -42,6 +45,8 @@ int main() {
     MenuScene menu(window);
     GameScene game(window, font);
     ResultScene result(window, font);
+    LoadingScene loading(window, font);
+    ConfirmScene confirm(window, font);
     
     Chart testChart;
     testChart.songName = "Test Song";
@@ -61,12 +66,16 @@ int main() {
     
     enum class AppState {
         Menu,
+        Loading,
+        Confirm,
         Game,
         Result
     };
     
     AppState state = AppState::Menu;
     sf::Clock clock;
+    std::future<Chart> detectionFuture;
+    std::string pendingMusicPath;
     
     while (window.isOpen()) {
         while (const auto event = window.pollEvent()) {
@@ -78,36 +87,45 @@ int main() {
                 case AppState::Menu: {
                     MenuResult resultAction = menu.handleEvent(*event);
                     if (resultAction == MenuResult::StartGame) {
-                        // 弹出文件选择对话框
                         std::string musicPath = openFileDialog();
 
                         if (!musicPath.empty()) {
-                            // 用户选择了文件，自动生成谱面
+                            // 异步启动节拍检测，显示加载动画
                             std::cout << "=== Auto Chart Generator ===" << std::endl;
                             std::cout << "Loading: " << musicPath << std::endl;
-
-                            BeatDetector detector;
-                            Chart generatedChart = detector.generate(musicPath);
-
-                            if (!generatedChart.notes.empty()) {
-                                game.loadChart(generatedChart, musicPath);
-                                std::cout << "Chart generated with "
-                                          << generatedChart.notes.size() << " notes." << std::endl;
-                            } else {
-                                // 检测失败，使用测试谱面
-                                std::cout << "No beats detected, using test chart." << std::endl;
-                                game.loadChart(testChart, "");
-                            }
+                            pendingMusicPath = musicPath;
+                            detectionFuture = std::async(std::launch::async, [musicPath]() {
+                                BeatDetector detector;
+                                return detector.generate(musicPath);
+                            });
+                            state = AppState::Loading;
                         } else {
-                            // 用户取消了文件选择，使用测试谱面
+                            // 用户取消，使用测试谱面
                             std::cout << "No file selected, using test chart." << std::endl;
                             game.loadChart(testChart, "");
+                            game.start();
+                            state = AppState::Game;
                         }
-
-                        game.start();
-                        state = AppState::Game;
                     } else if (resultAction == MenuResult::Exit) {
                         window.close();
+                    }
+                    break;
+                }
+                case AppState::Loading: {
+                    LoadingResult loadResult = loading.handleEvent(*event);
+                    if (loadResult == LoadingResult::Cancelled) {
+                        state = AppState::Menu;
+                    }
+                    break;
+                }
+                case AppState::Confirm: {
+                    ConfirmResult confirmResult = confirm.handleEvent(*event);
+                    if (confirmResult == ConfirmResult::StartGame) {
+                        game.loadChart(confirm.getChart(), confirm.getMusicPath());
+                        game.start();
+                        state = AppState::Game;
+                    } else if (confirmResult == ConfirmResult::Back) {
+                        state = AppState::Menu;
                     }
                     break;
                 }
@@ -135,6 +153,37 @@ int main() {
             case AppState::Menu:
                 menu.update(deltaTime);
                 menu.draw();
+                break;
+            case AppState::Loading:
+                loading.update(deltaTime);
+                loading.draw();
+                // 检查异步检测是否完成
+                if (detectionFuture.valid()) {
+                    auto status = detectionFuture.wait_for(std::chrono::milliseconds(0));
+                    if (status == std::future_status::ready) {
+                        Chart generatedChart;
+                        try {
+                            generatedChart = detectionFuture.get();
+                        } catch (const std::exception& e) {
+                            std::cerr << "Beat detection failed: " << e.what() << std::endl;
+                        }
+
+                        if (!generatedChart.notes.empty()) {
+                            std::cout << "Chart generated with "
+                                      << generatedChart.notes.size() << " notes." << std::endl;
+                        } else {
+                            std::cout << "No beats detected, using test chart." << std::endl;
+                            generatedChart = testChart;
+                        }
+
+                        confirm.setChart(generatedChart, pendingMusicPath);
+                        state = AppState::Confirm;
+                    }
+                }
+                break;
+            case AppState::Confirm:
+                confirm.update(deltaTime);
+                confirm.draw();
                 break;
             case AppState::Game:
                 game.update(deltaTime);
