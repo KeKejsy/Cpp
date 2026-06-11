@@ -175,9 +175,10 @@ private:
             {"Back to Menu", ResultAction::BackToMenu}
         };
         
+        // 修复按钮间距 - 加大间距避免重叠
         float startY = 540.0f;
-        float buttonSpacing = 100.0f;
-        float buttonWidth = 200.0f;
+        float buttonSpacing = 260.0f;  // 从 100 改为 260
+        float buttonWidth = 180.0f;    // 从 200 改为 180
         float buttonHeight = 50.0f;
         
         for (int i = 0; i < 2; i++) {

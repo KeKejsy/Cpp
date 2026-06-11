@@ -45,11 +45,11 @@ public:
         }
         int totalNotes = static_cast<int>(chart.notes.size());
 
-        // æ ¼å¼åŒ–æ—¶é•¿ (ç§’ â†’ m:ss)
+        // æ ¼å¼åŒ–æ—¶é•? (ç§? â†? m:ss)
         int minutes = static_cast<int>(chart.duration) / 60;
         int seconds = static_cast<int>(chart.duration) % 60;
 
-        // æ¯è½¨é“éŸ³ç¬¦åˆ†å¸ƒ
+        // æ¯è½¨é“éŸ³ç¬¦åˆ†å¸?
         int trackCounts[4] = {0, 0, 0, 0};
         for (const auto& note : chart.notes) {
             if (note.track >= 0 && note.track < 4) {
@@ -84,7 +84,7 @@ public:
             switch (keyEvent->code) {
                 case sf::Keyboard::Key::Up:
                     if (m_selectedIndex == 0) {
-                        // åœ¨ Start/Back æŒ‰é’®æ—¶ï¼ŒæŒ‰ä¸Šè·³åˆ°éš¾åº¦é€‰æ‹©
+                        // åœ? Start/Back æŒ‰é’®æ—¶ï¼ŒæŒ‰ä¸Šè·³åˆ°éš¾åº¦é€‰æ‹©
                         m_selectedIndex = 2;  // difficulty row
                     } else if (m_selectedIndex == 2) {
                         m_selectedIndex = 2;  // å·²ç»åœ¨éš¾åº¦è¡Œ
@@ -95,7 +95,7 @@ public:
                     break;
                 case sf::Keyboard::Key::Down:
                     if (m_selectedIndex == 2) {
-                        m_selectedIndex = 0;  // ä»éš¾åº¦è·³åˆ°æŒ‰é’®
+                        m_selectedIndex = 0;  // ä»éš¾åº¦è·³åˆ°æŒ‰é’?
                     } else {
                         m_selectedIndex = (m_selectedIndex + 1) % 3;
                     }
@@ -130,7 +130,7 @@ public:
         if (const auto* mouseEvent = event.getIf<sf::Event::MouseMoved>()) {
             sf::Vector2f mousePos(static_cast<float>(mouseEvent->position.x),
                                   static_cast<float>(mouseEvent->position.y));
-            // æ£€æŸ¥æŒ‰é’®
+            // æ£€æŸ¥æŒ‰é’?
             for (size_t i = 0; i < m_buttons.size(); i++) {
                 if (m_buttons[i].background.getGlobalBounds().contains(mousePos)) {
                     if (static_cast<int>(i) != m_selectedIndex) {
@@ -140,7 +140,7 @@ public:
                     break;
                 }
             }
-            // æ£€æŸ¥éš¾åº¦é€‰æ‹©å™¨
+            // æ£€æŸ¥éš¾åº¦é€‰æ‹©å™?
             if (m_diffLeftArrow.getGlobalBounds().contains(mousePos) ||
                 m_diffRightArrow.getGlobalBounds().contains(mousePos) ||
                 m_difficultyValue.getGlobalBounds().contains(mousePos)) {
@@ -161,12 +161,12 @@ public:
                         return btn.action;
                     }
                 }
-                // éš¾åº¦å·¦ç®­å¤´
+                // éš¾åº¦å·¦ç®­å¤?
                 if (m_diffLeftArrow.getGlobalBounds().contains(mousePos)) {
                     m_difficultyIndex = (m_difficultyIndex - 1 + 3) % 3;
                     updateDifficultyDisplay();
                 }
-                // éš¾åº¦å³ç®­å¤´
+                // éš¾åº¦å³ç®­å¤?
                 if (m_diffRightArrow.getGlobalBounds().contains(mousePos)) {
                     m_difficultyIndex = (m_difficultyIndex + 1) % 3;
                     updateDifficultyDisplay();
@@ -186,7 +186,7 @@ public:
         m_window.draw(m_titleText);
         m_window.draw(m_infoText);
 
-        // éš¾åº¦é€‰æ‹©å™¨
+        // éš¾åº¦é€‰æ‹©å™?
         m_window.draw(m_difficultyLabel);
         m_window.draw(m_difficultyValue);
         m_window.draw(m_diffLeftArrow);
@@ -214,44 +214,44 @@ private:
         sf::Vector2u windowSize = m_window.getSize();
         float centerX = static_cast<float>(windowSize.x) / 2.0f;
 
-        // èƒŒæ™¯
+        // ±³¾°
         m_background.setSize(sf::Vector2f(static_cast<float>(windowSize.x), static_cast<float>(windowSize.y)));
         m_background.setFillColor(sf::Color(25, 25, 45));
 
-        // æ ‡é¢˜
+        // ±êÌâ
         m_titleText.setFillColor(sf::Color::Cyan);
         m_titleText.setStyle(sf::Text::Bold);
         sf::FloatRect titleBounds = m_titleText.getLocalBounds();
         m_titleText.setPosition(sf::Vector2f(centerX - titleBounds.size.x / 2.0f, 30.0f));
 
-        // ä¿¡æ¯æ–‡å­—ï¼ˆå·¦ç§»ç»™éš¾åº¦é€‰æ‹©å™¨ç•™ç©ºé—´ï¼‰
+        // ĞÅÏ¢ÎÄ×Ö
         m_infoText.setFillColor(sf::Color(220, 220, 240));
         m_infoText.setPosition(sf::Vector2f(centerX - 280.0f, 95.0f));
 
-        // ---- éš¾åº¦é€‰æ‹©å™¨ ----
-        float diffY = 430.0f;
+        // ---- ÄÑ¶ÈÑ¡ÔñÆ÷ - ÉÏÒÆµ½ĞÅÏ¢ÎÄ×ÖºÍ°´Å¥Ö®¼ä ----
+        float diffY = 440.0f;  // ´Ó 430 ÏÂÒÆµ½ 440£¬¸øĞÅÏ¢ÎÄ×Ö¸ü¶à¿Õ¼ä
         m_difficultyLabel.setFillColor(sf::Color(180, 180, 200));
-        m_difficultyLabel.setPosition(sf::Vector2f(centerX - 160.0f, diffY));
+        m_difficultyLabel.setPosition(sf::Vector2f(centerX - 130.0f, diffY));  // ×óÒÆ
 
         m_diffLeftArrow.setFont(m_font);
         m_diffLeftArrow.setString("<");
         m_diffLeftArrow.setCharacterSize(28);
         m_diffLeftArrow.setFillColor(sf::Color::White);
-        m_diffLeftArrow.setPosition(sf::Vector2f(centerX + 20.0f, diffY - 3.0f));
+        m_diffLeftArrow.setPosition(sf::Vector2f(centerX + 10.0f, diffY - 3.0f));
 
         m_difficultyValue.setFillColor(sf::Color::Yellow);
         m_difficultyValue.setStyle(sf::Text::Bold);
-        m_difficultyValue.setPosition(sf::Vector2f(centerX + 55.0f, diffY - 2.0f));
+        m_difficultyValue.setPosition(sf::Vector2f(centerX + 45.0f, diffY - 2.0f));
 
         m_diffRightArrow.setFont(m_font);
         m_diffRightArrow.setString(">");
         m_diffRightArrow.setCharacterSize(28);
         m_diffRightArrow.setFillColor(sf::Color::White);
-        m_diffRightArrow.setPosition(sf::Vector2f(centerX + 175.0f, diffY - 3.0f));
+        m_diffRightArrow.setPosition(sf::Vector2f(centerX + 165.0f, diffY - 3.0f));
 
         updateDifficultyDisplay();
 
-        // ---- æŒ‰é’® ----
+        // ---- °´Å¥ - ÏÂÒÆ£¬¼Ó´ó¼ä¾à ----
         struct ButtonData {
             const char* label;
             ConfirmResult action;
@@ -260,9 +260,9 @@ private:
             {"Back", ConfirmResult::Back}
         };
 
-        float startY = 500.0f;
-        float buttonSpacing = 200.0f;
-        float buttonWidth = 220.0f;
+        float startY = 530.0f;        // ´Ó 500 ÏÂÒÆµ½ 530
+        float buttonSpacing = 260.0f; // ´Ó 200 Ôö¼Óµ½ 260
+        float buttonWidth = 180.0f;   // ´Ó 220 ¼õĞ¡µ½ 180
         float buttonHeight = 55.0f;
 
         for (int i = 0; i < 2; i++) {
@@ -323,7 +323,7 @@ private:
             }
         }
 
-        // éš¾åº¦è¡Œé«˜äº®
+        // éš¾åº¦è¡Œé«˜äº?
         if (m_selectedIndex == 2) {
             m_difficultyLabel.setFillColor(sf::Color::Yellow);
             m_diffLeftArrow.setFillColor(sf::Color::Yellow);
