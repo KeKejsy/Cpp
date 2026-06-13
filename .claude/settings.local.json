@@ -19,7 +19,8 @@
       "Bash(ninja rhythm_master *)",
       "Bash(cmake .. -G Ninja)",
       "Bash(./rhythm_master.exe)",
-      "Bash(ninja -j4)"
+      "Bash(ninja -j4)",
+      "Bash(cmake --build . --target rhythm_master)"
     ]
   }
 }
