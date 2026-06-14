@@ -13,7 +13,7 @@ using namespace std;
 class MapGenerator {
 public:
     MapGenerator();
-    explicit MapGenerator(Difficulty difficulty);
+    MapGenerator(Difficulty difficulty);
 
     // 核心接口：传入音频文件路径，返回生成的 Chart
     Chart generate(const string& audioFilePath);

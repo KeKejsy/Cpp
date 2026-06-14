@@ -4,7 +4,6 @@
 #include <SFML/Graphics.hpp>
 #include <sstream>
 #include <iomanip>
-#include <cstdint>
 #include "common.h"
 using namespace std;
 

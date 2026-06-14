@@ -5,7 +5,6 @@
 #include <SFML/Audio.hpp>
 #include <iostream>
 #include <unordered_map>
-#include <cstdint>
 using namespace std;
 
 class AssetManager {
