@@ -53,9 +53,9 @@ int main() {
     };
 
     // 轨道位置
-    float trackWidth = 150.0f;
-    float trackStartX = 100.0f;
-    float trackY = 500.0f;
+    float trackWidth = 150.0;
+    float trackStartX = 100.0;
+    float trackY = 500.0;
 
     // 主循环
     while (window.isOpen()) {

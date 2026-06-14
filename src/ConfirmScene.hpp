@@ -212,7 +212,7 @@ private:
 
     void setupUI() {
         sf::Vector2u windowSize = m_window.getSize();
-        float centerX = static_cast<float>(windowSize.x) / 2.0f;
+        float centerX = static_cast<float>(windowSize.x) / 2.0;
 
         // ����
         m_background.setSize(sf::Vector2f(static_cast<float>(windowSize.x), static_cast<float>(windowSize.y)));
@@ -222,32 +222,32 @@ private:
         m_titleText.setFillColor(sf::Color::Cyan);
         m_titleText.setStyle(sf::Text::Bold);
         sf::FloatRect titleBounds = m_titleText.getLocalBounds();
-        m_titleText.setPosition(sf::Vector2f(centerX - titleBounds.size.x / 2.0f, 30.0f));
+        m_titleText.setPosition(sf::Vector2f(centerX - titleBounds.size.x / 2.0, 30.0));
 
         // ��Ϣ����
         m_infoText.setFillColor(sf::Color(220, 220, 240));
-        m_infoText.setPosition(sf::Vector2f(centerX - 280.0f, 95.0f));
+        m_infoText.setPosition(sf::Vector2f(centerX - 280.0, 95.0));
 
         // ---- �Ѷ�ѡ���� - ���Ƶ���Ϣ���ֺͰ�ť֮�� ----
-        float diffY = 440.0f;  // �� 430 ���Ƶ� 440������Ϣ���ָ���ռ�
+        float diffY = 440.0;  // �� 430 ���Ƶ� 440������Ϣ���ָ���ռ�
         m_difficultyLabel.setFillColor(sf::Color(180, 180, 200));
-        m_difficultyLabel.setPosition(sf::Vector2f(centerX - 130.0f, diffY));  // ����
+        m_difficultyLabel.setPosition(sf::Vector2f(centerX - 130.0, diffY));  // ����
 
         m_diffLeftArrow.setFont(m_font);
         m_diffLeftArrow.setString("<");
         m_diffLeftArrow.setCharacterSize(28);
         m_diffLeftArrow.setFillColor(sf::Color::White);
-        m_diffLeftArrow.setPosition(sf::Vector2f(centerX + 10.0f, diffY - 3.0f));
+        m_diffLeftArrow.setPosition(sf::Vector2f(centerX + 10.0, diffY - 3.0));
 
         m_difficultyValue.setFillColor(sf::Color::Yellow);
         m_difficultyValue.setStyle(sf::Text::Bold);
-        m_difficultyValue.setPosition(sf::Vector2f(centerX + 45.0f, diffY - 2.0f));
+        m_difficultyValue.setPosition(sf::Vector2f(centerX + 45.0, diffY - 2.0));
 
         m_diffRightArrow.setFont(m_font);
         m_diffRightArrow.setString(">");
         m_diffRightArrow.setCharacterSize(28);
         m_diffRightArrow.setFillColor(sf::Color::White);
-        m_diffRightArrow.setPosition(sf::Vector2f(centerX + 165.0f, diffY - 3.0f));
+        m_diffRightArrow.setPosition(sf::Vector2f(centerX + 165.0, diffY - 3.0));
 
         updateDifficultyDisplay();
 
@@ -260,10 +260,10 @@ private:
             {"Back", ConfirmResult::Back}
         };
 
-        float startY = 530.0f;        // �� 500 ���Ƶ� 530
-        float buttonSpacing = 260.0f; // �� 200 ���ӵ� 260
-        float buttonWidth = 180.0f;   // �� 220 ��С�� 180
-        float buttonHeight = 55.0f;
+        float startY = 530.0;        // �� 500 ���Ƶ� 530
+        float buttonSpacing = 260.0; // �� 200 ���ӵ� 260
+        float buttonWidth = 180.0;   // �� 220 ��С�� 180
+        float buttonHeight = 55.0;
 
         for (int i = 0; i < 2; i++) {
             Button btn(m_font, buttons[i].label, buttons[i].action);
@@ -271,9 +271,9 @@ private:
             btn.background.setSize(sf::Vector2f(buttonWidth, buttonHeight));
             btn.background.setFillColor(sf::Color(60, 60, 100));
             btn.background.setOutlineColor(sf::Color::White);
-            btn.background.setOutlineThickness(2.0f);
+            btn.background.setOutlineThickness(2.0);
             btn.background.setPosition(sf::Vector2f(
-                centerX - buttonWidth / 2.0f + (i - 0.5f) * buttonSpacing,
+                centerX - buttonWidth / 2.0 + (i - 0.5) * buttonSpacing,
                 startY
             ));
 
@@ -281,8 +281,8 @@ private:
 
             sf::FloatRect textBounds = btn.text.getLocalBounds();
             btn.text.setPosition(sf::Vector2f(
-                centerX - textBounds.size.x / 2.0f + (i - 0.5f) * buttonSpacing,
-                startY + (buttonHeight - textBounds.size.y) / 2.0f - 5.0f
+                centerX - textBounds.size.x / 2.0 + (i - 0.5) * buttonSpacing,
+                startY + (buttonHeight - textBounds.size.y) / 2.0 - 5.0
             ));
 
             m_buttons.push_back(btn);
@@ -304,8 +304,8 @@ private:
 
         // 居中文本
         sf::FloatRect bounds = m_difficultyValue.getLocalBounds();
-        float centerX = static_cast<float>(m_window.getSize().x) / 2.0f;
-        m_difficultyValue.setPosition(sf::Vector2f(centerX + 55.0f, 428.0f));
+        float centerX = static_cast<float>(m_window.getSize().x) / 2.0;
+        m_difficultyValue.setPosition(sf::Vector2f(centerX + 55.0, 428.0));
     }
 
     void updateSelection() {
@@ -313,12 +313,12 @@ private:
             if (static_cast<int>(i) == m_selectedIndex) {
                 m_buttons[i].background.setFillColor(sf::Color(100, 100, 200));
                 m_buttons[i].background.setOutlineColor(sf::Color::Yellow);
-                m_buttons[i].background.setOutlineThickness(3.0f);
+                m_buttons[i].background.setOutlineThickness(3.0);
                 m_buttons[i].text.setFillColor(sf::Color::Yellow);
             } else {
                 m_buttons[i].background.setFillColor(sf::Color(60, 60, 100));
                 m_buttons[i].background.setOutlineColor(sf::Color::White);
-                m_buttons[i].background.setOutlineThickness(2.0f);
+                m_buttons[i].background.setOutlineThickness(2.0);
                 m_buttons[i].text.setFillColor(sf::Color::White);
             }
         }

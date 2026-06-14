@@ -25,10 +25,10 @@ private:
     // 频段状态：每个频段独立追踪能量历史和 hold 状态
     struct BandState {
         deque<float> energyHistory;
-        float historySum = 0.0f;
+        float historySum = 0.0;
         bool inHold = false;
-        float holdStartTime = 0.0f;
-        float lastBeatTime = -1.0f;
+        float holdStartTime = 0.0;
+        float lastBeatTime = -1.0;
         vector<float> beatTimes;
         vector<float> beatDurations;
     };

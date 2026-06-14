@@ -21,7 +21,7 @@ public:
         , m_font(AssetManager::getInstance().getFont())
         , m_selectedIndex(0)
         , m_titleText(m_font, "=== Rhythm Master ===", 48)
-        , m_titleFlashTimer(0.0f) {
+        , m_titleFlashTimer(0.0) {
         setupUI();
         initParticles();
     }
@@ -76,11 +76,11 @@ public:
 
     void update(float deltaTime) {
         m_titleFlashTimer += deltaTime;
-        if (m_titleFlashTimer > 0.8f) {
-            m_titleFlashTimer = 0.0f;
+        if (m_titleFlashTimer > 0.8) {
+            m_titleFlashTimer = 0.0;
         }
         
-        float intensity = 0.6f + 0.4f * (m_titleFlashTimer / 0.8f);
+        float intensity = 0.6 + 0.4 * (m_titleFlashTimer / 0.8);
         sf::Color titleColor(
             static_cast<uint8_t>(100 * intensity),
             static_cast<uint8_t>(200 * intensity),
@@ -125,31 +125,31 @@ private:
         float speed;
         float x, y;
         
-        Particle() : shape(), speed(0.0f), x(0.0f), y(0.0f) {}
+        Particle() : shape(), speed(0.0), x(0.0), y(0.0) {}
     };
 
     void setupUI() {
         sf::Vector2u windowSize = m_window.getSize();
-        float centerX = static_cast<float>(windowSize.x) / 2.0f;
+        float centerX = static_cast<float>(windowSize.x) / 2.0;
         
         m_background.setSize(sf::Vector2f(static_cast<float>(windowSize.x), static_cast<float>(windowSize.y)));
         m_background.setFillColor(sf::Color(20, 20, 40));
         
-        m_topBar.setSize(sf::Vector2f(static_cast<float>(windowSize.x), 5.0f));
+        m_topBar.setSize(sf::Vector2f(static_cast<float>(windowSize.x), 5.0));
         m_topBar.setFillColor(sf::Color(100, 100, 200));
-        m_topBar.setPosition(sf::Vector2f(0.0f, 0.0f));
+        m_topBar.setPosition(sf::Vector2f(0.0, 0.0));
         
-        m_bottomBar.setSize(sf::Vector2f(static_cast<float>(windowSize.x), 5.0f));
+        m_bottomBar.setSize(sf::Vector2f(static_cast<float>(windowSize.x), 5.0));
         m_bottomBar.setFillColor(sf::Color(100, 100, 200));
-        m_bottomBar.setPosition(sf::Vector2f(0.0f, static_cast<float>(windowSize.y) - 5.0f));
+        m_bottomBar.setPosition(sf::Vector2f(0.0, static_cast<float>(windowSize.y) - 5.0));
         
         m_titleText.setOutlineColor(sf::Color::White);
-        m_titleText.setOutlineThickness(2.0f);
+        m_titleText.setOutlineThickness(2.0);
         
         sf::FloatRect titleBounds = m_titleText.getLocalBounds();
         m_titleText.setPosition(sf::Vector2f(
-            centerX - titleBounds.size.x / 2.0f,
-            100.0f
+            centerX - titleBounds.size.x / 2.0,
+            100.0
         ));
         
         struct ItemData {
@@ -160,10 +160,10 @@ private:
             {"Exit", MenuResult::Exit}
         };
         
-        float startY = 300.0f;
-        float itemSpacing = 80.0f;
-        float itemWidth = 250.0f;
-        float itemHeight = 60.0f;
+        float startY = 300.0;
+        float itemSpacing = 80.0;
+        float itemWidth = 250.0;
+        float itemHeight = 60.0;
         
         for (int i = 0; i < 2; i++) {
             MenuItem item(m_font, items[i].label, items[i].action);
@@ -171,9 +171,9 @@ private:
             item.background.setSize(sf::Vector2f(itemWidth, itemHeight));
             item.background.setFillColor(sf::Color(60, 60, 100));
             item.background.setOutlineColor(sf::Color::White);
-            item.background.setOutlineThickness(2.0f);
+            item.background.setOutlineThickness(2.0);
             item.background.setPosition(sf::Vector2f(
-                centerX - itemWidth / 2.0f,
+                centerX - itemWidth / 2.0,
                 startY + i * itemSpacing
             ));
             
@@ -181,8 +181,8 @@ private:
             
             sf::FloatRect textBounds = item.text.getLocalBounds();
             item.text.setPosition(sf::Vector2f(
-                centerX - textBounds.size.x / 2.0f,
-                startY + i * itemSpacing + (itemHeight - textBounds.size.y) / 2.0f - 5.0f
+                centerX - textBounds.size.x / 2.0,
+                startY + i * itemSpacing + (itemHeight - textBounds.size.y) / 2.0 - 5.0
             ));
             
             m_items.push_back(item);
@@ -196,12 +196,12 @@ private:
             if (static_cast<int>(i) == m_selectedIndex) {
                 m_items[i].background.setFillColor(sf::Color(100, 100, 200));
                 m_items[i].background.setOutlineColor(sf::Color::Yellow);
-                m_items[i].background.setOutlineThickness(3.0f);
+                m_items[i].background.setOutlineThickness(3.0);
                 m_items[i].text.setFillColor(sf::Color::Yellow);
             } else {
                 m_items[i].background.setFillColor(sf::Color(60, 60, 100));
                 m_items[i].background.setOutlineColor(sf::Color::White);
-                m_items[i].background.setOutlineThickness(2.0f);
+                m_items[i].background.setOutlineThickness(2.0);
                 m_items[i].text.setFillColor(sf::Color::White);
             }
         }
@@ -213,7 +213,7 @@ private:
         
         for (int i = 0; i < 100; i++) {
             Particle p;
-            float radius = 2.0f + static_cast<float>(rand() % 3);
+            float radius = 2.0 + static_cast<float>(rand() % 3);
             p.shape.setRadius(radius);
             p.shape.setFillColor(sf::Color(
                 static_cast<uint8_t>(100 + rand() % 155),
@@ -225,7 +225,7 @@ private:
             p.x = static_cast<float>(rand() % windowSize.x);
             p.y = static_cast<float>(rand() % windowSize.y);
             p.shape.setPosition(sf::Vector2f(p.x, p.y));
-            p.speed = 20.0f + static_cast<float>(rand() % 50);
+            p.speed = 20.0 + static_cast<float>(rand() % 50);
             
             m_particles.push_back(p);
         }

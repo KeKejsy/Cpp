@@ -8,10 +8,10 @@
 using namespace std;
 
 // 静态常量定义（在 .h 中声明，这里赋值）
-const float MapGenerator::BAND_EDGES[5] = {20.0f, 200.0f, 800.0f, 3000.0f, 20000.0f};
-const float MapGenerator::SUSTAIN_RATIO = 0.25f;
-const float MapGenerator::MIN_HOLD_DURATION = 0.25f;
-const float MapGenerator::ABSOLUTE_MIN_ENERGY = 0.0005f;
+const float MapGenerator::BAND_EDGES[5] = {20.0, 200.0, 800.0, 3000.0, 20000.0};
+const float MapGenerator::SUSTAIN_RATIO = 0.25;
+const float MapGenerator::MIN_HOLD_DURATION = 0.25;
+const float MapGenerator::ABSOLUTE_MIN_ENERGY = 0.0005;
 
 // ---------------------------------------------------------------------------
 // 构造 / 难度
@@ -19,8 +19,8 @@ const float MapGenerator::ABSOLUTE_MIN_ENERGY = 0.0005f;
 MapGenerator::MapGenerator()
     : m_windowSize(1024)
     , m_historySize(43)
-    , m_threshold(1.8f)
-    , m_minInterval(0.22f)
+    , m_threshold(1.8)
+    , m_minInterval(0.22)
     , m_difficulty(Difficulty::Normal) {
     srand(static_cast<unsigned int>(time(nullptr)));
 }
@@ -38,18 +38,18 @@ void MapGenerator::setDifficulty(Difficulty difficulty) {
 void MapGenerator::applyDifficulty() {
     switch (m_difficulty) {
         case Difficulty::Easy:
-            m_threshold = 2.5f;
-            m_minInterval = 0.35f;
+            m_threshold = 2.5;
+            m_minInterval = 0.35;
             m_historySize = 55;       // 更长历史 → 更稳定平均值 → 更少节拍
             break;
         case Difficulty::Normal:
-            m_threshold = 1.8f;
-            m_minInterval = 0.22f;
+            m_threshold = 1.8;
+            m_minInterval = 0.22;
             m_historySize = 43;
             break;
         case Difficulty::Hard:
-            m_threshold = 1.2f;
-            m_minInterval = 0.12f;
+            m_threshold = 1.2;
+            m_minInterval = 0.12;
             m_historySize = 30;       // 更短历史 → 更敏感 → 更多节拍
             break;
     }
@@ -76,12 +76,12 @@ void MapGenerator::fft(vector<float>& real, vector<float>& imag) {
 
     // 蝶形运算
     for (int len = 2; len <= n; len <<= 1) {
-        float angle = -2.0f * 3.14159265358979f / len;
+        float angle = -2.0 * 3.14159265358979 / len;
         float wReal = cos(angle);
         float wImag = sin(angle);
         for (int i = 0; i < n; i += len) {
-            float curReal = 1.0f;
-            float curImag = 0.0f;
+            float curReal = 1.0;
+            float curImag = 0.0;
             for (int j = 0; j < len / 2; j++) {
                 int u = i + j;
                 int v = i + j + len / 2;
@@ -105,7 +105,7 @@ void MapGenerator::fft(vector<float>& real, vector<float>& imag) {
 void MapGenerator::applyHannWindow(vector<float>& samples) {
     int n = static_cast<int>(samples.size());
     for (int i = 0; i < n; i++) {
-        float multiplier = 0.5f * (1.0f - cos(2.0f * 3.14159265358979f * i / (n - 1)));
+        float multiplier = 0.5 * (1.0 - cos(2.0 * 3.14159265358979 * i / (n - 1)));
         samples[i] *= multiplier;
     }
 }
@@ -121,7 +121,7 @@ void MapGenerator::computeBandEnergies(const vector<float>& real,
     float binWidth = sampleRate / n;
 
     for (int b = 0; b < 4; b++) {
-        bandEnergies[b] = 0.0f;
+        bandEnergies[b] = 0.0;
         float lowFreq = BAND_EDGES[b];
         float highFreq = BAND_EDGES[b + 1];
 
@@ -150,9 +150,9 @@ int MapGenerator::convertToMono(const int16_t* buffer, int numSamples,
     monoOut.resize(frameCount);
 
     for (int i = 0; i < frameCount; i++) {
-        float sum = 0.0f;
+        float sum = 0.0;
         for (int ch = 0; ch < channelCount; ch++) {
-            sum += static_cast<float>(buffer[i * channelCount + ch]) / 32768.0f;
+            sum += static_cast<float>(buffer[i * channelCount + ch]) / 32768.0;
         }
         monoOut[i] = sum / channelCount;
     }
@@ -211,7 +211,7 @@ Chart MapGenerator::generate(const string& audioFilePath) {
     int windowIndex = 0;
 
     // 自适应 sustain 阈值：随音乐动态调整
-    float globalAvgEnergy = 0.0f;
+    float globalAvgEnergy = 0.0;
     int globalWindowCount = 0;
 
     cout << "[MapGenerator] 开始 FFT 频段分析..." << endl;
@@ -228,12 +228,12 @@ Chart MapGenerator::generate(const string& audioFilePath) {
 
         // 如果最后一块不足 m_windowSize，用零填充
         if (framesInChunk < m_windowSize) {
-            monoBuf.resize(m_windowSize, 0.0f);
+            monoBuf.resize(m_windowSize, 0.0);
         }
 
         // ---- FFT 分析 ----
         copy(monoBuf.begin(), monoBuf.end(), fftReal.begin());
-        fill(fftImag.begin(), fftImag.end(), 0.0f);
+        fill(fftImag.begin(), fftImag.end(), 0.0);
         applyHannWindow(fftReal);
         fft(fftReal, fftImag);
 
@@ -242,9 +242,9 @@ Chart MapGenerator::generate(const string& audioFilePath) {
         computeBandEnergies(fftReal, fftImag, static_cast<float>(sampleRate), bandEnergies);
 
         // 更新全局平均能量（用于自适应 sustain）
-        float totalEnergy = 0.0f;
+        float totalEnergy = 0.0;
         for (int b = 0; b < 4; b++) totalEnergy += bandEnergies[b];
-        totalEnergy /= 4.0f;
+        totalEnergy /= 4.0;
         globalAvgEnergy = (globalAvgEnergy * globalWindowCount + totalEnergy) / (globalWindowCount + 1);
         globalWindowCount++;
 
@@ -273,7 +273,7 @@ Chart MapGenerator::generate(const string& audioFilePath) {
             }
 
             // 自适应 sustain 阈值
-            float sustainThreshold = max(ABSOLUTE_MIN_ENERGY * 0.5f,
+            float sustainThreshold = max(static_cast<float>(ABSOLUTE_MIN_ENERGY * 0.5),
                                                avgEnergy * SUSTAIN_RATIO);
 
             // ---- 节拍检测 ----
@@ -287,7 +287,7 @@ Chart MapGenerator::generate(const string& audioFilePath) {
                             st.beatDurations.push_back(holdDuration);
                         } else {
                             st.beatTimes.push_back(st.holdStartTime);
-                            st.beatDurations.push_back(0.0f);
+                            st.beatDurations.push_back(0.0);
                         }
                     }
                     // 开始新的 hold
@@ -305,7 +305,7 @@ Chart MapGenerator::generate(const string& audioFilePath) {
                     st.beatDurations.push_back(holdDuration);
                 } else {
                     st.beatTimes.push_back(st.holdStartTime);
-                    st.beatDurations.push_back(0.0f);
+                    st.beatDurations.push_back(0.0);
                 }
                 st.inHold = false;
             }
@@ -333,7 +333,7 @@ Chart MapGenerator::generate(const string& audioFilePath) {
                 st.beatDurations.push_back(holdDuration);
             } else {
                 st.beatTimes.push_back(st.holdStartTime);
-                st.beatDurations.push_back(0.0f);
+                st.beatDurations.push_back(0.0);
             }
         }
     }
@@ -344,7 +344,7 @@ Chart MapGenerator::generate(const string& audioFilePath) {
     for (int b = 0; b < 4; b++) {
         totalBeats += static_cast<int>(bands[b].beatTimes.size());
         for (size_t j = 0; j < bands[b].beatDurations.size(); j++) {
-            if (bands[b].beatDurations[j] > 0.0f) totalHolds++;
+            if (bands[b].beatDurations[j] > 0.0) totalHolds++;
         }
     }
 
@@ -383,12 +383,12 @@ Chart MapGenerator::generate(const string& audioFilePath) {
         if (candidates[i].time < 0) continue;
         for (size_t j = i + 1; j < candidates.size(); j++) {
             if (candidates[j].time < 0) continue;
-            if (candidates[j].time - candidates[i].time < 0.030f) {
+            if (candidates[j].time - candidates[i].time < 0.030) {
                 if (candidates[j].duration > candidates[i].duration) {
-                    candidates[i].time = -1.0f;
+                    candidates[i].time = -1.0;
                     break;
                 } else {
-                    candidates[j].time = -1.0f;
+                    candidates[j].time = -1.0;
                 }
             } else {
                 break;
@@ -403,7 +403,7 @@ Chart MapGenerator::generate(const string& audioFilePath) {
     // 对于重叠的音符：优先换轨道，无可用的轨道则跳过该音符
     // 对于连续过多的音符：优先换轨道，无可用的轨道则允许继续（重叠 > 单调）
 
-    const float MIN_GAP = 0.06f;          // 同轨道相邻音符最小间隔
+    const float MIN_GAP = 0.06;          // 同轨道相邻音符最小间隔
     const int MAX_CONSECUTIVE = 3;        // 同轨道最大连续音符数（超过则尝试换轨道）
 
     float trackFreeUntil[4] = {0, 0, 0, 0};
@@ -442,7 +442,7 @@ Chart MapGenerator::generate(const string& audioFilePath) {
                 c.track = bestTrack;
             } else if (overlapOnPreferred) {
                 // 所有轨道都被占用 → 只能跳过这个音符
-                c.time = -1.0f;
+                c.time = -1.0;
                 continue;
             }
             // 如果只是连续过多但无可用轨道 → 留在原轨道（可以接受）
@@ -477,7 +477,7 @@ Chart MapGenerator::generate(const string& audioFilePath) {
         note.time = candidates[i].time;
         note.track = candidates[i].track;
         note.duration = candidates[i].duration;
-        note.type = (candidates[i].duration > 0.0f) ? 1 : 0;
+        note.type = (candidates[i].duration > 0.0) ? 1 : 0;
         note.hit = false;
         note.hitTime = 0.0;
         chart.notes.push_back(note);

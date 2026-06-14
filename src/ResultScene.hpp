@@ -22,7 +22,7 @@ public:
         , m_titleText(font, "=== GAME OVER ===", 40)
         , m_statsText(font, "", 20)
         , m_rankText(font, "S", 80)
-        , m_animationTimer(0.0f) {
+        , m_animationTimer(0.0) {
         setupUI();
     }
 
@@ -41,7 +41,7 @@ public:
         int totalNotes = m_stats.perfectCount + m_stats.greatCount + m_stats.goodCount + m_stats.missCount;
         if (totalNotes > 0) {
             int hitNotes = m_stats.perfectCount + m_stats.greatCount + m_stats.goodCount;
-            float accuracy = (float)hitNotes / totalNotes * 100.0f;
+            float accuracy = (float)hitNotes / totalNotes * 100.0;
             ss << fixed << setprecision(1) << accuracy << "%";
         } else {
             ss << "0%";
@@ -143,29 +143,29 @@ private:
         
         float accuracy = (float)(m_stats.perfectCount + m_stats.greatCount + m_stats.goodCount) / totalNotes;
         
-        if (accuracy >= 0.98f && m_stats.missCount == 0) return 'S';
-        if (accuracy >= 0.90f) return 'A';
-        if (accuracy >= 0.80f) return 'B';
-        if (accuracy >= 0.70f) return 'C';
+        if (accuracy >= 0.98 && m_stats.missCount == 0) return 'S';
+        if (accuracy >= 0.90) return 'A';
+        if (accuracy >= 0.80) return 'B';
+        if (accuracy >= 0.70) return 'C';
         return 'D';
     }
 
     void setupUI() {
         sf::Vector2u windowSize = m_window.getSize();
-        float centerX = static_cast<float>(windowSize.x) / 2.0f;
+        float centerX = static_cast<float>(windowSize.x) / 2.0;
         
         m_background.setSize(sf::Vector2f(static_cast<float>(windowSize.x), static_cast<float>(windowSize.y)));
         m_background.setFillColor(sf::Color(30, 30, 50));
         
         m_titleText.setFillColor(sf::Color::Cyan);
         sf::FloatRect titleBounds = m_titleText.getLocalBounds();
-        m_titleText.setPosition(sf::Vector2f(centerX - titleBounds.size.x / 2.0f, 50.0f));
+        m_titleText.setPosition(sf::Vector2f(centerX - titleBounds.size.x / 2.0, 50.0));
         
         m_statsText.setFillColor(sf::Color::White);
-        m_statsText.setPosition(sf::Vector2f(centerX - 250.0f, 200.0f));
+        m_statsText.setPosition(sf::Vector2f(centerX - 250.0, 200.0));
         
         m_rankText.setStyle(sf::Text::Bold);
-        m_rankText.setPosition(sf::Vector2f(centerX + 200.0f, 220.0f));
+        m_rankText.setPosition(sf::Vector2f(centerX + 200.0, 220.0));
         
         struct ButtonData {
             const char* label;
@@ -176,10 +176,10 @@ private:
         };
         
         // �޸���ť��� - �Ӵ�������ص�
-        float startY = 540.0f;
-        float buttonSpacing = 260.0f;  // �� 100 ��Ϊ 260
-        float buttonWidth = 180.0f;    // �� 200 ��Ϊ 180
-        float buttonHeight = 50.0f;
+        float startY = 540.0;
+        float buttonSpacing = 260.0;  // �� 100 ��Ϊ 260
+        float buttonWidth = 180.0;    // �� 200 ��Ϊ 180
+        float buttonHeight = 50.0;
         
         for (int i = 0; i < 2; i++) {
             Button btn(m_font, buttons[i].label, buttons[i].action);
@@ -187,9 +187,9 @@ private:
             btn.background.setSize(sf::Vector2f(buttonWidth, buttonHeight));
             btn.background.setFillColor(sf::Color(60, 60, 100));
             btn.background.setOutlineColor(sf::Color::White);
-            btn.background.setOutlineThickness(2.0f);
+            btn.background.setOutlineThickness(2.0);
             btn.background.setPosition(sf::Vector2f(
-                centerX - buttonWidth / 2.0f + (i - 0.5f) * buttonSpacing,
+                centerX - buttonWidth / 2.0 + (i - 0.5) * buttonSpacing,
                 startY
             ));
             
@@ -197,8 +197,8 @@ private:
             
             sf::FloatRect textBounds = btn.text.getLocalBounds();
             btn.text.setPosition(sf::Vector2f(
-                centerX - textBounds.size.x / 2.0f + (i - 0.5f) * buttonSpacing,
-                startY + (buttonHeight - textBounds.size.y) / 2.0f - 5.0f
+                centerX - textBounds.size.x / 2.0 + (i - 0.5) * buttonSpacing,
+                startY + (buttonHeight - textBounds.size.y) / 2.0 - 5.0
             ));
             
             m_buttons.push_back(btn);
@@ -214,12 +214,12 @@ private:
             if (static_cast<int>(i) == m_selectedIndex) {
                 m_buttons[i].background.setFillColor(sf::Color(100, 100, 200));
                 m_buttons[i].background.setOutlineColor(sf::Color::Yellow);
-                m_buttons[i].background.setOutlineThickness(3.0f);
+                m_buttons[i].background.setOutlineThickness(3.0);
                 m_buttons[i].text.setFillColor(sf::Color::Yellow);
             } else {
                 m_buttons[i].background.setFillColor(sf::Color(60, 60, 100));
                 m_buttons[i].background.setOutlineColor(sf::Color::White);
-                m_buttons[i].background.setOutlineThickness(2.0f);
+                m_buttons[i].background.setOutlineThickness(2.0);
                 m_buttons[i].text.setFillColor(sf::Color::White);
             }
         }
