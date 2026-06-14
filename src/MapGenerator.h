@@ -33,6 +33,8 @@ private:
         float holdStartTime = 0.0;
         float holdStartEnergy = 0.0;    // 起音时能量，用于判定持续结束
         float lastBeatTime = -1.0;
+        float lastFlux = 0.0;           // 上一窗口 flux，用于局部峰值检测
+        bool waitingReset = false;      // 触发后等待 flux 降至阈值以下再重新启用
         vector<float> beatTimes;
         vector<float> beatDurations;
     };
@@ -61,7 +63,8 @@ private:
     int m_windowSize;           // 窗口大小（采样点数），默认 1024
     int m_historySize;          // flux 历史窗口数，默认 43
     float m_threshold;          // flux 阈值倍数（相对 avgFlux）
-    float m_minInterval;        // 最小节拍间隔（秒）
+    float m_minInterval;        // 单轨道最小节拍间隔（秒）
+    float m_globalMinInterval;  // 全局最小音符间隔（秒），跨轨道限流
     Difficulty m_difficulty;
 
     // 频段边界 (Hz) — 4 个频段 → 4 个轨道
