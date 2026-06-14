@@ -11,8 +11,8 @@ find_path(MINGW_BIN_DIR NAMES "libstdc++-6.dll" PATHS "C:/msys64/ucrt64/bin" NO_
 
 add_executable(rhythm_master
     src/GameMain.cpp
-    src/GameFramework.cpp
-    src/BeatDetector.cpp
+    src/Framework.cpp
+    src/MapGenerator.cpp
 )
 
 target_link_libraries(rhythm_master
@@ -23,10 +23,10 @@ target_link_libraries(rhythm_master
     comdlg32
 )
 
-# BeatDetector 测试程序（文件已删除，暂时注释）
+# MapGenerator 测试程序（文件已删除，暂时注释）
 # add_executable(test_beat
 #     src/test_beat.cpp
-#     src/BeatDetector.cpp
+#     src/MapGenerator.cpp
 # )
 # target_link_libraries(test_beat
 #     SFML::Audio
@@ -51,7 +51,7 @@ endif()
 # 成员 B 测试 (文件已删除，暂时注释)
 # add_executable(test_member_b
 #     src/test_member_b.cpp
-#     src/GameFramework.cpp
+#     src/Framework.cpp
 # )
 #
 # target_link_libraries(test_member_b

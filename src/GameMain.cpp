@@ -5,7 +5,7 @@
 #include "MenuScene.hpp"
 #include "GameScene.hpp"
 #include "ResultScene.hpp"
-#include "BeatDetector.h"
+#include "MapGenerator.h"
 #include <future>
 #include "LoadingScene.hpp"
 #include "ConfirmScene.hpp"
@@ -100,7 +100,7 @@ int main() {
                             pendingMusicPath = musicPath;
                             currentDifficulty = Difficulty::Normal;
                             detectionFuture = async(launch::async, [musicPath]() {
-                                BeatDetector detector(Difficulty::Normal);
+                                MapGenerator detector(Difficulty::Normal);
                                 return detector.generate(musicPath);
                             });
                             state = AppState::Loading;
@@ -131,7 +131,7 @@ int main() {
                             // 难度变更，用新难度重新生成谱面（同步，FFT 很快）
                             cout << "[GameMain] Difficulty changed, regenerating..." << endl;
                             currentDifficulty = selectedDifficulty;
-                            BeatDetector detector(currentDifficulty);
+                            MapGenerator detector(currentDifficulty);
                             Chart regenerated = detector.generate(pendingMusicPath);
                             if (!regenerated.notes.empty()) {
                                 confirm.setChart(regenerated, pendingMusicPath);

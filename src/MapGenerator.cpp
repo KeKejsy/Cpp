@@ -1,4 +1,4 @@
-#include "BeatDetector.h"
+#include "MapGenerator.h"
 #include <SFML/Audio.hpp>
 #include <cmath>
 #include <cstdlib>
@@ -8,15 +8,15 @@
 using namespace std;
 
 // 静态常量定义（在 .h 中声明，这里赋值）
-const float BeatDetector::BAND_EDGES[5] = {20.0f, 200.0f, 800.0f, 3000.0f, 20000.0f};
-const float BeatDetector::SUSTAIN_RATIO = 0.25f;
-const float BeatDetector::MIN_HOLD_DURATION = 0.25f;
-const float BeatDetector::ABSOLUTE_MIN_ENERGY = 0.0005f;
+const float MapGenerator::BAND_EDGES[5] = {20.0f, 200.0f, 800.0f, 3000.0f, 20000.0f};
+const float MapGenerator::SUSTAIN_RATIO = 0.25f;
+const float MapGenerator::MIN_HOLD_DURATION = 0.25f;
+const float MapGenerator::ABSOLUTE_MIN_ENERGY = 0.0005f;
 
 // ---------------------------------------------------------------------------
 // 构造 / 难度
 // ---------------------------------------------------------------------------
-BeatDetector::BeatDetector()
+MapGenerator::MapGenerator()
     : m_windowSize(1024)
     , m_historySize(43)
     , m_threshold(1.8f)
@@ -25,17 +25,17 @@ BeatDetector::BeatDetector()
     srand(static_cast<unsigned int>(time(nullptr)));
 }
 
-BeatDetector::BeatDetector(Difficulty difficulty)
-    : BeatDetector() {
+MapGenerator::MapGenerator(Difficulty difficulty)
+    : MapGenerator() {
     setDifficulty(difficulty);
 }
 
-void BeatDetector::setDifficulty(Difficulty difficulty) {
+void MapGenerator::setDifficulty(Difficulty difficulty) {
     m_difficulty = difficulty;
     applyDifficulty();
 }
 
-void BeatDetector::applyDifficulty() {
+void MapGenerator::applyDifficulty() {
     switch (m_difficulty) {
         case Difficulty::Easy:
             m_threshold = 2.5f;
@@ -58,7 +58,7 @@ void BeatDetector::applyDifficulty() {
 // ---------------------------------------------------------------------------
 // FFT: radix-2 Cooley-Tukey, 迭代实现
 // ---------------------------------------------------------------------------
-void BeatDetector::fft(vector<float>& real, vector<float>& imag) {
+void MapGenerator::fft(vector<float>& real, vector<float>& imag) {
     int n = static_cast<int>(real.size());
     if (n <= 1) return;
 
@@ -102,7 +102,7 @@ void BeatDetector::fft(vector<float>& real, vector<float>& imag) {
 // ---------------------------------------------------------------------------
 // Hann 窗
 // ---------------------------------------------------------------------------
-void BeatDetector::applyHannWindow(vector<float>& samples) {
+void MapGenerator::applyHannWindow(vector<float>& samples) {
     int n = static_cast<int>(samples.size());
     for (int i = 0; i < n; i++) {
         float multiplier = 0.5f * (1.0f - cos(2.0f * 3.14159265358979f * i / (n - 1)));
@@ -113,7 +113,7 @@ void BeatDetector::applyHannWindow(vector<float>& samples) {
 // ---------------------------------------------------------------------------
 // 频段能量计算
 // ---------------------------------------------------------------------------
-void BeatDetector::computeBandEnergies(const vector<float>& real,
+void MapGenerator::computeBandEnergies(const vector<float>& real,
                                         const vector<float>& imag,
                                         float sampleRate,
                                         float bandEnergies[4]) {
@@ -144,7 +144,7 @@ void BeatDetector::computeBandEnergies(const vector<float>& real,
 // ---------------------------------------------------------------------------
 // 立体声 → 单声道
 // ---------------------------------------------------------------------------
-int BeatDetector::convertToMono(const int16_t* buffer, int numSamples,
+int MapGenerator::convertToMono(const int16_t* buffer, int numSamples,
                                  int channelCount, vector<float>& monoOut) {
     int frameCount = numSamples / channelCount;
     monoOut.resize(frameCount);
@@ -163,7 +163,7 @@ int BeatDetector::convertToMono(const int16_t* buffer, int numSamples,
 // ---------------------------------------------------------------------------
 // 核心：谱面生成
 // ---------------------------------------------------------------------------
-Chart BeatDetector::generate(const string& audioFilePath) {
+Chart MapGenerator::generate(const string& audioFilePath) {
     Chart chart;
     chart.songName = audioFilePath;
     chart.bpm = 0.0;
@@ -172,7 +172,7 @@ Chart BeatDetector::generate(const string& audioFilePath) {
     // 打开音频文件
     sf::InputSoundFile file;
     if (!file.openFromFile(audioFilePath)) {
-        cerr << "[BeatDetector] 无法打开音频文件: " << audioFilePath << endl;
+        cerr << "[MapGenerator] 无法打开音频文件: " << audioFilePath << endl;
         return chart;
     }
 
@@ -181,13 +181,13 @@ Chart BeatDetector::generate(const string& audioFilePath) {
     unsigned int channelCount = file.getChannelCount();
 
     if (totalFrames <= 0 || sampleRate <= 0) {
-        cerr << "[BeatDetector] 音频数据无效" << endl;
+        cerr << "[MapGenerator] 音频数据无效" << endl;
         return chart;
     }
 
     chart.duration = static_cast<double>(totalFrames) / sampleRate;
 
-    cout << "[BeatDetector] 音频加载成功" << endl;
+    cout << "[MapGenerator] 音频加载成功" << endl;
     cout << "  采样率: " << sampleRate << " Hz" << endl;
     cout << "  声道数: " << channelCount << endl;
     cout << "  时长: " << chart.duration << " 秒" << endl;
@@ -214,7 +214,7 @@ Chart BeatDetector::generate(const string& audioFilePath) {
     float globalAvgEnergy = 0.0f;
     int globalWindowCount = 0;
 
-    cout << "[BeatDetector] 开始 FFT 频段分析..." << endl;
+    cout << "[MapGenerator] 开始 FFT 频段分析..." << endl;
 
     while (framesRead < totalFrames) {
         int64_t read = file.read(buffer.data(), samplesPerWindow);
@@ -348,7 +348,7 @@ Chart BeatDetector::generate(const string& audioFilePath) {
         }
     }
 
-    cout << "[BeatDetector] 分析完成" << endl;
+    cout << "[MapGenerator] 分析完成" << endl;
     cout << "  Band 0 (20-200Hz,   Bass):    " << bands[0].beatTimes.size() << " notes" << endl;
     cout << "  Band 1 (200-800Hz,  Low-Mid): " << bands[1].beatTimes.size() << " notes" << endl;
     cout << "  Band 2 (800-3000Hz, High-Mid):" << bands[2].beatTimes.size() << " notes" << endl;
@@ -464,7 +464,7 @@ Chart BeatDetector::generate(const string& audioFilePath) {
     for (size_t i = 0; i < candidates.size(); i++) {
         if (candidates[i].time >= 0) trackNoteCount[candidates[i].track]++;
     }
-    cout << "[BeatDetector] final: T0=" << trackNoteCount[0]
+    cout << "[MapGenerator] final: T0=" << trackNoteCount[0]
               << " T1=" << trackNoteCount[1]
               << " T2=" << trackNoteCount[2]
               << " T3=" << trackNoteCount[3] << endl;
@@ -486,10 +486,10 @@ Chart BeatDetector::generate(const string& audioFilePath) {
     // BPM 估算
     if (!chart.notes.empty()) {
         chart.bpm = static_cast<double>(chart.notes.size()) / chart.duration * 60.0;
-        cout << "[BeatDetector] 最终谱面: " << chart.notes.size()
+        cout << "[MapGenerator] 最终谱面: " << chart.notes.size()
                   << " 个音符, 估算 BPM: " << chart.bpm << endl;
     } else {
-        cout << "[BeatDetector] 未检测到节拍，请尝试调低难度" << endl;
+        cout << "[MapGenerator] 未检测到节拍，请尝试调低难度" << endl;
     }
 
     return chart;

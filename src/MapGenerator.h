@@ -7,13 +7,13 @@
 #include <deque>
 using namespace std;
 
-// BeatDetector - 自动谱面生成器
+// MapGenerator - 自动谱面生成器
 // 基于 FFT 频段能量分析：将音频按频率拆分为 4 个频段，每个频段独立检测节拍，
 // 频段直接映射到游戏轨道（低频→轨道0, 中低频→轨道1, 中高频→轨道2, 高频→轨道3）
-class BeatDetector {
+class MapGenerator {
 public:
-    BeatDetector();
-    explicit BeatDetector(Difficulty difficulty);
+    MapGenerator();
+    explicit MapGenerator(Difficulty difficulty);
 
     // 核心接口：传入音频文件路径，返回生成的 Chart
     Chart generate(const string& audioFilePath);

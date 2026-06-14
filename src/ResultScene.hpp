@@ -5,7 +5,7 @@
 #include <sstream>
 #include <iomanip>
 #include <cstdint>
-#include "GameFramework.h"
+#include "Framework.h"
 using namespace std;
 
 enum class ResultAction {

@@ -6,7 +6,7 @@
 #include <cmath>
 #include <cstdint>
 #include <algorithm>
-#include "GameFramework.h"
+#include "Framework.h"
 #include "AssetManager.hpp"
 using namespace std;
 
@@ -418,7 +418,7 @@ private:
 
     sf::RenderWindow& m_window;
     sf::Font& m_font;
-    GameFramework m_game;
+    Framework m_game;
 
     vector<TrackConfig> m_tracks;
     float m_trackStartX;

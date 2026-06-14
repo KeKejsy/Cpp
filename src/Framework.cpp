@@ -1,8 +1,8 @@
-#include "GameFramework.h"
+#include "Framework.h"
 #include <cmath>
 using namespace std;
 
-GameFramework::GameFramework()
+Framework::Framework()
     : m_state(GameState::Menu)
     , m_latestJudgment(Judgment::None)
     , m_latestJudgmentTime(0.0)
@@ -14,22 +14,22 @@ GameFramework::GameFramework()
     resetStats();
 }
 
-GameFramework::~GameFramework() = default;
+Framework::~Framework() = default;
 
-void GameFramework::loadChart(const Chart& chart, const string& musicPath) {
+void Framework::loadChart(const Chart& chart, const string& musicPath) {
     m_chart = chart;
     if (!musicPath.empty()) {
         m_music.openFromFile(musicPath);
     }
 }
 
-void GameFramework::startGame() {
+void Framework::startGame() {
     resetStats();
     m_state = GameState::Playing;
     m_music.play();
 }
 
-void GameFramework::update(double currentTime) {
+void Framework::update(double currentTime) {
     if (m_state != GameState::Playing) {
         return;
     }
@@ -99,7 +99,7 @@ void GameFramework::update(double currentTime) {
     }
 }
 
-void GameFramework::handleKeyPress(int track) {
+void Framework::handleKeyPress(int track) {
     if (m_state != GameState::Playing || m_keyPressed[track]) {
         return;
     }
@@ -156,7 +156,7 @@ void GameFramework::handleKeyPress(int track) {
     }
 }
 
-void GameFramework::handleKeyRelease(int track) {
+void Framework::handleKeyRelease(int track) {
     m_keyPressed[track] = false;
 
     // 检查该轨道是否有活跃的 hold 音符
@@ -205,12 +205,12 @@ void GameFramework::handleKeyRelease(int track) {
     }
 }
 
-void GameFramework::endGame() {
+void Framework::endGame() {
     m_music.stop();
     m_state = GameState::Result;
 }
 
-int GameFramework::judgeNote(double noteTime, double currentTime) {
+int Framework::judgeNote(double noteTime, double currentTime) {
     double diff = abs(currentTime - noteTime);
 
     // 浮点精度容差（1e-9），避免边界值误判
@@ -233,7 +233,7 @@ int GameFramework::judgeNote(double noteTime, double currentTime) {
     return -1;
 }
 
-void GameFramework::updateStats(int judgment) {
+void Framework::updateStats(int judgment) {
     switch (judgment) {
         case 3:
             m_stats.perfectCount++;
@@ -265,7 +265,7 @@ void GameFramework::updateStats(int judgment) {
     }
 }
 
-void GameFramework::resetStats() {
+void Framework::resetStats() {
     m_stats.perfectCount = 0;
     m_stats.greatCount = 0;
     m_stats.goodCount = 0;
@@ -280,20 +280,20 @@ void GameFramework::resetStats() {
     m_holdJudgment = vector<int>(4, 0);
 }
 
-bool GameFramework::isNoteBeingHeld(int noteIndex) const {
+bool Framework::isNoteBeingHeld(int noteIndex) const {
     for (int i = 0; i < 4; i++) {
         if (m_activeHoldIndex[i] == noteIndex) return true;
     }
     return false;
 }
 
-double GameFramework::getMusicTime() const {
+double Framework::getMusicTime() const {
     if (m_testTime >= 0.0) {
         return m_testTime;
     }
     return m_music.getPlayingOffset().asSeconds();
 }
 
-void GameFramework::setTestTime(double time) {
+void Framework::setTestTime(double time) {
     m_testTime = time;
 }

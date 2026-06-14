@@ -30,10 +30,10 @@ struct GameStats {
     int maxCombo;
 };
 
-class GameFramework {
+class Framework {
 public:
-    GameFramework();
-    ~GameFramework();
+    Framework();
+    ~Framework();
 
     void loadChart(const Chart& chart, const string& musicPath);
     void startGame();

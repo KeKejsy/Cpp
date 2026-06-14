@@ -3,7 +3,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
-#include "GameFramework.h"
+#include "Framework.h"
 using namespace std;
 
 int main() {
@@ -41,7 +41,7 @@ int main() {
     }
 
     // 创建游戏框架
-    GameFramework game;
+    Framework game;
     game.loadChart(testChart, "");
 
     // 轨道颜色
