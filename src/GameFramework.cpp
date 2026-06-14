@@ -1,5 +1,6 @@
 #include "GameFramework.h"
 #include <cmath>
+using namespace std;
 
 GameFramework::GameFramework()
     : m_state(GameState::Menu)
@@ -15,7 +16,7 @@ GameFramework::GameFramework()
 
 GameFramework::~GameFramework() = default;
 
-void GameFramework::loadChart(const Chart& chart, const std::string& musicPath) {
+void GameFramework::loadChart(const Chart& chart, const string& musicPath) {
     m_chart = chart;
     if (!musicPath.empty()) {
         m_music.openFromFile(musicPath);
@@ -115,7 +116,7 @@ void GameFramework::handleKeyPress(int track) {
             continue;
         }
 
-        double diff = std::abs(currentTime - note.time);
+        double diff = abs(currentTime - note.time);
         if (diff < closestTime && diff <= MAX_SEARCH_WINDOW) {
             closestTime = diff;
             closestNote = &note;
@@ -210,7 +211,7 @@ void GameFramework::endGame() {
 }
 
 int GameFramework::judgeNote(double noteTime, double currentTime) {
-    double diff = std::abs(currentTime - noteTime);
+    double diff = abs(currentTime - noteTime);
 
     // 浮点精度容差（1e-9），避免边界值误判
     const double eps = 1e-9;
@@ -275,8 +276,8 @@ void GameFramework::resetStats() {
     m_latestJudgment = Judgment::None;
     m_latestJudgmentTime = 0.0;
     m_latestJudgmentTrack = -1;
-    m_activeHoldIndex = std::vector<int>(4, -1);
-    m_holdJudgment = std::vector<int>(4, 0);
+    m_activeHoldIndex = vector<int>(4, -1);
+    m_holdJudgment = vector<int>(4, 0);
 }
 
 bool GameFramework::isNoteBeingHeld(int noteIndex) const {

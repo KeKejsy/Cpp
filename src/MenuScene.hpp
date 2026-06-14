@@ -6,6 +6,7 @@
 #include <cstdlib>
 #include <cstdint>
 #include "AssetManager.hpp"
+using namespace std;
 
 enum class MenuResult {
     None,
@@ -81,9 +82,9 @@ public:
         
         float intensity = 0.6f + 0.4f * (m_titleFlashTimer / 0.8f);
         sf::Color titleColor(
-            static_cast<std::uint8_t>(100 * intensity),
-            static_cast<std::uint8_t>(200 * intensity),
-            static_cast<std::uint8_t>(255 * intensity)
+            static_cast<uint8_t>(100 * intensity),
+            static_cast<uint8_t>(200 * intensity),
+            static_cast<uint8_t>(255 * intensity)
         );
         m_titleText.setFillColor(titleColor);
         
@@ -113,7 +114,7 @@ private:
         sf::Text text;
         MenuResult action;
         
-        MenuItem(const sf::Font& font, const std::string& label, MenuResult act)
+        MenuItem(const sf::Font& font, const string& label, MenuResult act)
             : background()
             , text(font, label, 28)
             , action(act) {}
@@ -215,9 +216,9 @@ private:
             float radius = 2.0f + static_cast<float>(rand() % 3);
             p.shape.setRadius(radius);
             p.shape.setFillColor(sf::Color(
-                static_cast<std::uint8_t>(100 + rand() % 155),
-                static_cast<std::uint8_t>(100 + rand() % 155),
-                static_cast<std::uint8_t>(200 + rand() % 55),
+                static_cast<uint8_t>(100 + rand() % 155),
+                static_cast<uint8_t>(100 + rand() % 155),
+                static_cast<uint8_t>(200 + rand() % 55),
                 100
             ));
             
@@ -247,13 +248,13 @@ private:
 
     sf::RenderWindow& m_window;
     sf::Font& m_font;
-    std::vector<MenuItem> m_items;
+    vector<MenuItem> m_items;
     int m_selectedIndex;
     
     sf::Text m_titleText;
     float m_titleFlashTimer;
     
-    std::vector<Particle> m_particles;
+    vector<Particle> m_particles;
     sf::RectangleShape m_background;
     sf::RectangleShape m_topBar;
     sf::RectangleShape m_bottomBar;

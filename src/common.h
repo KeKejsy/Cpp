@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+using namespace std;
 
 enum class Difficulty {
     Easy,
@@ -19,8 +20,8 @@ struct Note {
 };
 
 struct Chart {
-    std::string songName;
+    string songName;
     double bpm;
     double duration;
-    std::vector<Note> notes;
+    vector<Note> notes;
 };

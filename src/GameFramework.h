@@ -3,6 +3,7 @@
 #include "common.h"
 #include <SFML/Audio.hpp>
 #include <string>
+using namespace std;
 
 enum class GameState {
     Menu,
@@ -34,7 +35,7 @@ public:
     GameFramework();
     ~GameFramework();
 
-    void loadChart(const Chart& chart, const std::string& musicPath);
+    void loadChart(const Chart& chart, const string& musicPath);
     void startGame();
     void update(double currentTime);
     void handleKeyPress(int track);
@@ -42,7 +43,7 @@ public:
     void endGame();
 
     const Chart& getChart() const { return m_chart; }
-    const std::vector<Note>& getNotes() const { return m_chart.notes; }
+    const vector<Note>& getNotes() const { return m_chart.notes; }
     const GameStats& getStats() const { return m_stats; }
     GameState getState() const { return m_state; }
     Judgment getLatestJudgment() const { return m_latestJudgment; }
@@ -71,11 +72,11 @@ private:
     Judgment m_latestJudgment;
     double m_latestJudgmentTime;
     int m_latestJudgmentTrack;
-    std::vector<bool> m_keyPressed;
+    vector<bool> m_keyPressed;
     double m_testTime;
 
     // hold 音符追踪：每个轨道当前正在按住的音符索引（-1 表示无）
-    std::vector<int> m_activeHoldIndex;
+    vector<int> m_activeHoldIndex;
     // 每个轨道 hold 音符的原始判定结果（按下时判定，结算时使用）
-    std::vector<int> m_holdJudgment;
+    vector<int> m_holdJudgment;
 };

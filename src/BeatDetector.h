@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <deque>
+using namespace std;
 
 // BeatDetector - 自动谱面生成器
 // 基于 FFT 频段能量分析：将音频按频率拆分为 4 个频段，每个频段独立检测节拍，
@@ -15,7 +16,7 @@ public:
     explicit BeatDetector(Difficulty difficulty);
 
     // 核心接口：传入音频文件路径，返回生成的 Chart
-    Chart generate(const std::string& audioFilePath);
+    Chart generate(const string& audioFilePath);
 
     // 运行时调整难度
     void setDifficulty(Difficulty difficulty);
@@ -23,31 +24,31 @@ public:
 private:
     // 频段状态：每个频段独立追踪能量历史和 hold 状态
     struct BandState {
-        std::deque<float> energyHistory;
+        deque<float> energyHistory;
         float historySum = 0.0f;
         bool inHold = false;
         float holdStartTime = 0.0f;
         float lastBeatTime = -1.0f;
-        std::vector<float> beatTimes;
-        std::vector<float> beatDurations;
+        vector<float> beatTimes;
+        vector<float> beatDurations;
     };
 
     // FFT: in-place radix-2 Cooley-Tukey (迭代实现)
-    void fft(std::vector<float>& real, std::vector<float>& imag);
+    void fft(vector<float>& real, vector<float>& imag);
 
     // 应用 Hann 窗，减少频谱泄漏
-    void applyHannWindow(std::vector<float>& samples);
+    void applyHannWindow(vector<float>& samples);
 
     // 从 FFT 结果计算 4 个频段的能量
     // bandEdges[5] = {low, midLow, midHigh, high, nyquist} 频段边界频率 (Hz)
-    void computeBandEnergies(const std::vector<float>& real,
-                              const std::vector<float>& imag,
+    void computeBandEnergies(const vector<float>& real,
+                              const vector<float>& imag,
                               float sampleRate,
                               float bandEnergies[4]);
 
     // 将立体声 int16 采样转换为单声道 float，返回有效采样数
     int convertToMono(const int16_t* buffer, int numSamples, int channelCount,
-                      std::vector<float>& monoOut);
+                      vector<float>& monoOut);
 
     // 根据难度设置参数
     void applyDifficulty();

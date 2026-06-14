@@ -6,6 +6,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <cstdint>
+using namespace std;
 
 class AssetManager {
 public:
@@ -14,8 +15,8 @@ public:
         return instance;
     }
 
-    sf::Font& getFont(const std::string& path = "") {
-        std::string key = path.empty() ? "default" : path;
+    sf::Font& getFont(const string& path = "") {
+        string key = path.empty() ? "default" : path;
         
         if (m_fonts.find(key) == m_fonts.end()) {
             sf::Font font;
@@ -33,17 +34,17 @@ public:
                     }
                 }
                 if (!loaded) {
-                    std::cerr << "Warning: Cannot load font" << std::endl;
+                    cerr << "Warning: Cannot load font" << endl;
                 }
             } else {
                 [[maybe_unused]] bool loaded = font.openFromFile(key);
             }
-            m_fonts[key] = std::move(font);
+            m_fonts[key] = move(font);
         }
         return m_fonts[key];
     }
 
 private:
     AssetManager() = default;
-    std::unordered_map<std::string, sf::Font> m_fonts;
+    unordered_map<string, sf::Font> m_fonts;
 };

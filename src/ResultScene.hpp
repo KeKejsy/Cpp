@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <cstdint>
 #include "GameFramework.h"
+using namespace std;
 
 enum class ResultAction {
     None,
@@ -29,7 +30,7 @@ public:
     void setStats(const GameStats& stats) {
         m_stats = stats;
         
-        std::stringstream ss;
+        stringstream ss;
         ss << "Total Score: " << m_stats.totalScore << "\n\n";
         ss << "Perfect: " << m_stats.perfectCount << "\n";
         ss << "Great:   " << m_stats.greatCount << "\n";
@@ -42,7 +43,7 @@ public:
         if (totalNotes > 0) {
             int hitNotes = m_stats.perfectCount + m_stats.greatCount + m_stats.goodCount;
             float accuracy = (float)hitNotes / totalNotes * 100.0f;
-            ss << std::fixed << std::setprecision(1) << accuracy << "%";
+            ss << fixed << setprecision(1) << accuracy << "%";
         } else {
             ss << "0%";
         }
@@ -50,7 +51,7 @@ public:
         m_statsText.setString(ss.str());
         
         char rank = calculateRank();
-        m_rankText.setString(std::string(1, rank));
+        m_rankText.setString(string(1, rank));
         
         switch (rank) {
             case 'S': m_rankText.setFillColor(sf::Color(255, 215, 0)); break;
@@ -131,7 +132,7 @@ private:
         sf::Text text;
         ResultAction action;
         
-        Button(const sf::Font& font, const std::string& label, ResultAction act)
+        Button(const sf::Font& font, const string& label, ResultAction act)
             : background()
             , text(font, label, 24)
             , action(act) {}
@@ -175,10 +176,10 @@ private:
             {"Back to Menu", ResultAction::BackToMenu}
         };
         
-        // ÐÞ¸´°´Å¥¼ä¾à - ¼Ó´ó¼ä¾à±ÜÃâÖØµþ
+        // ï¿½Þ¸ï¿½ï¿½ï¿½Å¥ï¿½ï¿½ï¿½ - ï¿½Ó´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Øµï¿½
         float startY = 540.0f;
-        float buttonSpacing = 260.0f;  // ´Ó 100 ¸ÄÎª 260
-        float buttonWidth = 180.0f;    // ´Ó 200 ¸ÄÎª 180
+        float buttonSpacing = 260.0f;  // ï¿½ï¿½ 100 ï¿½ï¿½Îª 260
+        float buttonWidth = 180.0f;    // ï¿½ï¿½ 200 ï¿½ï¿½Îª 180
         float buttonHeight = 50.0f;
         
         for (int i = 0; i < 2; i++) {
@@ -228,7 +229,7 @@ private:
     sf::RenderWindow& m_window;
     sf::Font& m_font;
     GameStats m_stats;
-    std::vector<Button> m_buttons;
+    vector<Button> m_buttons;
     int m_selectedIndex;
     
     sf::Text m_titleText;

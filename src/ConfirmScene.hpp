@@ -6,6 +6,7 @@
 #include <iomanip>
 #include <cstdint>
 #include "common.h"
+using namespace std;
 
 enum class ConfirmResult {
     None,
@@ -29,7 +30,7 @@ public:
         setupUI();
     }
 
-    void setChart(const Chart& chart, const std::string& musicPath) {
+    void setChart(const Chart& chart, const string& musicPath) {
         m_chart = chart;
         m_musicPath = musicPath;
 
@@ -45,11 +46,11 @@ public:
         }
         int totalNotes = static_cast<int>(chart.notes.size());
 
-        // æ ¼å¼åŒ–æ—¶é•? (ç§? â†? m:ss)
+        // æ ¼å¼åŒ–æ—¶ï¿½? (ï¿½? ï¿½? m:ss)
         int minutes = static_cast<int>(chart.duration) / 60;
         int seconds = static_cast<int>(chart.duration) % 60;
 
-        // æ¯è½¨é“éŸ³ç¬¦åˆ†å¸?
+        // æ¯è½¨é“éŸ³ç¬¦åˆ†ï¿½?
         int trackCounts[4] = {0, 0, 0, 0};
         for (const auto& note : chart.notes) {
             if (note.track >= 0 && note.track < 4) {
@@ -57,10 +58,10 @@ public:
             }
         }
 
-        std::stringstream ss;
+        stringstream ss;
         ss << "Song: " << chart.songName << "\n\n";
-        ss << "BPM: " << std::fixed << std::setprecision(1) << chart.bpm << " (estimated)\n";
-        ss << "Duration: " << minutes << ":" << std::setw(2) << std::setfill('0') << seconds << "\n\n";
+        ss << "BPM: " << fixed << setprecision(1) << chart.bpm << " (estimated)\n";
+        ss << "Duration: " << minutes << ":" << setw(2) << setfill('0') << seconds << "\n\n";
         ss << "Total Notes: " << totalNotes << "\n";
         ss << "  Tap:  " << tapCount << "\n";
         ss << "  Hold: " << holdCount << "\n\n";
@@ -74,7 +75,7 @@ public:
     }
 
     const Chart& getChart() const { return m_chart; }
-    const std::string& getMusicPath() const { return m_musicPath; }
+    const string& getMusicPath() const { return m_musicPath; }
     Difficulty getDifficulty() const {
         return static_cast<Difficulty>(m_difficultyIndex);
     }
@@ -84,7 +85,7 @@ public:
             switch (keyEvent->code) {
                 case sf::Keyboard::Key::Up:
                     if (m_selectedIndex == 0) {
-                        // åœ? Start/Back æŒ‰é’®æ—¶ï¼ŒæŒ‰ä¸Šè·³åˆ°éš¾åº¦é€‰æ‹©
+                        // ï¿½? Start/Back æŒ‰é’®æ—¶ï¼ŒæŒ‰ä¸Šè·³åˆ°éš¾åº¦é€‰æ‹©
                         m_selectedIndex = 2;  // difficulty row
                     } else if (m_selectedIndex == 2) {
                         m_selectedIndex = 2;  // å·²ç»åœ¨éš¾åº¦è¡Œ
@@ -95,7 +96,7 @@ public:
                     break;
                 case sf::Keyboard::Key::Down:
                     if (m_selectedIndex == 2) {
-                        m_selectedIndex = 0;  // ä»éš¾åº¦è·³åˆ°æŒ‰é’?
+                        m_selectedIndex = 0;  // ä»éš¾åº¦è·³åˆ°æŒ‰ï¿½?
                     } else {
                         m_selectedIndex = (m_selectedIndex + 1) % 3;
                     }
@@ -130,7 +131,7 @@ public:
         if (const auto* mouseEvent = event.getIf<sf::Event::MouseMoved>()) {
             sf::Vector2f mousePos(static_cast<float>(mouseEvent->position.x),
                                   static_cast<float>(mouseEvent->position.y));
-            // æ£€æŸ¥æŒ‰é’?
+            // æ£€æŸ¥æŒ‰ï¿½?
             for (size_t i = 0; i < m_buttons.size(); i++) {
                 if (m_buttons[i].background.getGlobalBounds().contains(mousePos)) {
                     if (static_cast<int>(i) != m_selectedIndex) {
@@ -140,7 +141,7 @@ public:
                     break;
                 }
             }
-            // æ£€æŸ¥éš¾åº¦é€‰æ‹©å™?
+            // æ£€æŸ¥éš¾åº¦é€‰æ‹©ï¿½?
             if (m_diffLeftArrow.getGlobalBounds().contains(mousePos) ||
                 m_diffRightArrow.getGlobalBounds().contains(mousePos) ||
                 m_difficultyValue.getGlobalBounds().contains(mousePos)) {
@@ -161,12 +162,12 @@ public:
                         return btn.action;
                     }
                 }
-                // éš¾åº¦å·¦ç®­å¤?
+                // éš¾åº¦å·¦ç®­ï¿½?
                 if (m_diffLeftArrow.getGlobalBounds().contains(mousePos)) {
                     m_difficultyIndex = (m_difficultyIndex - 1 + 3) % 3;
                     updateDifficultyDisplay();
                 }
-                // éš¾åº¦å³ç®­å¤?
+                // éš¾åº¦å³ç®­ï¿½?
                 if (m_diffRightArrow.getGlobalBounds().contains(mousePos)) {
                     m_difficultyIndex = (m_difficultyIndex + 1) % 3;
                     updateDifficultyDisplay();
@@ -186,7 +187,7 @@ public:
         m_window.draw(m_titleText);
         m_window.draw(m_infoText);
 
-        // éš¾åº¦é€‰æ‹©å™?
+        // éš¾åº¦é€‰æ‹©ï¿½?
         m_window.draw(m_difficultyLabel);
         m_window.draw(m_difficultyValue);
         m_window.draw(m_diffLeftArrow);
@@ -204,7 +205,7 @@ private:
         sf::Text text;
         ConfirmResult action;
 
-        Button(const sf::Font& font, const std::string& label, ConfirmResult act)
+        Button(const sf::Font& font, const string& label, ConfirmResult act)
             : background()
             , text(font, label, 26)
             , action(act) {}
@@ -214,24 +215,24 @@ private:
         sf::Vector2u windowSize = m_window.getSize();
         float centerX = static_cast<float>(windowSize.x) / 2.0f;
 
-        // ±³¾°
+        // ï¿½ï¿½ï¿½ï¿½
         m_background.setSize(sf::Vector2f(static_cast<float>(windowSize.x), static_cast<float>(windowSize.y)));
         m_background.setFillColor(sf::Color(25, 25, 45));
 
-        // ±êÌâ
+        // ï¿½ï¿½ï¿½ï¿½
         m_titleText.setFillColor(sf::Color::Cyan);
         m_titleText.setStyle(sf::Text::Bold);
         sf::FloatRect titleBounds = m_titleText.getLocalBounds();
         m_titleText.setPosition(sf::Vector2f(centerX - titleBounds.size.x / 2.0f, 30.0f));
 
-        // ĞÅÏ¢ÎÄ×Ö
+        // ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ï¿½
         m_infoText.setFillColor(sf::Color(220, 220, 240));
         m_infoText.setPosition(sf::Vector2f(centerX - 280.0f, 95.0f));
 
-        // ---- ÄÑ¶ÈÑ¡ÔñÆ÷ - ÉÏÒÆµ½ĞÅÏ¢ÎÄ×ÖºÍ°´Å¥Ö®¼ä ----
-        float diffY = 440.0f;  // ´Ó 430 ÏÂÒÆµ½ 440£¬¸øĞÅÏ¢ÎÄ×Ö¸ü¶à¿Õ¼ä
+        // ---- ï¿½Ñ¶ï¿½Ñ¡ï¿½ï¿½ï¿½ï¿½ - ï¿½ï¿½ï¿½Æµï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½ÖºÍ°ï¿½Å¥Ö®ï¿½ï¿½ ----
+        float diffY = 440.0f;  // ï¿½ï¿½ 430 ï¿½ï¿½ï¿½Æµï¿½ 440ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢ï¿½ï¿½ï¿½Ö¸ï¿½ï¿½ï¿½Õ¼ï¿½
         m_difficultyLabel.setFillColor(sf::Color(180, 180, 200));
-        m_difficultyLabel.setPosition(sf::Vector2f(centerX - 130.0f, diffY));  // ×óÒÆ
+        m_difficultyLabel.setPosition(sf::Vector2f(centerX - 130.0f, diffY));  // ï¿½ï¿½ï¿½ï¿½
 
         m_diffLeftArrow.setFont(m_font);
         m_diffLeftArrow.setString("<");
@@ -251,7 +252,7 @@ private:
 
         updateDifficultyDisplay();
 
-        // ---- °´Å¥ - ÏÂÒÆ£¬¼Ó´ó¼ä¾à ----
+        // ---- ï¿½ï¿½Å¥ - ï¿½ï¿½ï¿½Æ£ï¿½ï¿½Ó´ï¿½ï¿½ï¿½ ----
         struct ButtonData {
             const char* label;
             ConfirmResult action;
@@ -260,9 +261,9 @@ private:
             {"Back", ConfirmResult::Back}
         };
 
-        float startY = 530.0f;        // ´Ó 500 ÏÂÒÆµ½ 530
-        float buttonSpacing = 260.0f; // ´Ó 200 Ôö¼Óµ½ 260
-        float buttonWidth = 180.0f;   // ´Ó 220 ¼õĞ¡µ½ 180
+        float startY = 530.0f;        // ï¿½ï¿½ 500 ï¿½ï¿½ï¿½Æµï¿½ 530
+        float buttonSpacing = 260.0f; // ï¿½ï¿½ 200 ï¿½ï¿½ï¿½Óµï¿½ 260
+        float buttonWidth = 180.0f;   // ï¿½ï¿½ 220 ï¿½ï¿½Ğ¡ï¿½ï¿½ 180
         float buttonHeight = 55.0f;
 
         for (int i = 0; i < 2; i++) {
@@ -323,7 +324,7 @@ private:
             }
         }
 
-        // éš¾åº¦è¡Œé«˜äº?
+        // éš¾åº¦è¡Œé«˜ï¿½?
         if (m_selectedIndex == 2) {
             m_difficultyLabel.setFillColor(sf::Color::Yellow);
             m_diffLeftArrow.setFillColor(sf::Color::Yellow);
@@ -338,8 +339,8 @@ private:
     sf::RenderWindow& m_window;
     sf::Font& m_font;
     Chart m_chart;
-    std::string m_musicPath;
-    std::vector<Button> m_buttons;
+    string m_musicPath;
+    vector<Button> m_buttons;
     int m_selectedIndex;
     int m_difficultyIndex;  // 0=Easy, 1=Normal, 2=Hard
 

@@ -4,13 +4,14 @@
 #include <string>
 #include <sstream>
 #include "GameFramework.h"
+using namespace std;
 
 int main() {
-    std::cout << "=== 节奏大师 - 交互式测试 ===" << std::endl;
-    std::cout << "按 SPACE 开始游戏" << std::endl;
-    std::cout << "按 D/F/J/K 对应轨道 0/1/2/3" << std::endl;
-    std::cout << "按 ESC 退出" << std::endl;
-    std::cout << std::endl;
+    cout << "=== 节奏大师 - 交互式测试 ===" << endl;
+    cout << "按 SPACE 开始游戏" << endl;
+    cout << "按 D/F/J/K 对应轨道 0/1/2/3" << endl;
+    cout << "按 ESC 退出" << endl;
+    cout << endl;
 
     // 创建窗口
     sf::RenderWindow window(sf::VideoMode({800, 600}), "节奏大师 - 交互式测试");
@@ -19,7 +20,7 @@ int main() {
     // 加载字体
     sf::Font font;
     if (!font.openFromFile("C:/Windows/Fonts/arial.ttf")) {
-        std::cerr << "无法加载字体！" << std::endl;
+        cerr << "无法加载字体！" << endl;
         return 1;
     }
 
@@ -66,7 +67,7 @@ int main() {
             if (const auto* keyPressed = event->getIf<sf::Event::KeyPressed>()) {
                 if (keyPressed->code == sf::Keyboard::Key::Space) {
                     if (!game.isPlaying()) {
-                        std::cout << "游戏开始！" << std::endl;
+                        cout << "游戏开始！" << endl;
                         game.startGame();
                     }
                 }
@@ -152,7 +153,7 @@ int main() {
 
         // 绘制得分信息
         const auto& stats = game.getStats();
-        std::stringstream ss;
+        stringstream ss;
         ss << "Score: " << stats.totalScore << "\n";
         ss << "Combo: " << stats.combo << "\n";
         ss << "Perfect: " << stats.perfectCount << "\n";
@@ -188,7 +189,7 @@ int main() {
         if (game.isPlaying()) {
             Judgment latest = game.getLatestJudgment();
             if (latest != Judgment::None) {
-                std::string judgmentStr;
+                string judgmentStr;
                 sf::Color judgmentColor;
 
                 switch (latest) {

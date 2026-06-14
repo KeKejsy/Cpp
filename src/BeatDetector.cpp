@@ -5,6 +5,7 @@
 #include <ctime>
 #include <iostream>
 #include <algorithm>
+using namespace std;
 
 // ---------------------------------------------------------------------------
 // 构造 / 难度
@@ -15,7 +16,7 @@ BeatDetector::BeatDetector()
     , m_threshold(1.8f)
     , m_minInterval(0.22f)
     , m_difficulty(Difficulty::Normal) {
-    std::srand(static_cast<unsigned int>(std::time(nullptr)));
+    srand(static_cast<unsigned int>(time(nullptr)));
 }
 
 BeatDetector::BeatDetector(Difficulty difficulty)
@@ -51,7 +52,7 @@ void BeatDetector::applyDifficulty() {
 // ---------------------------------------------------------------------------
 // FFT: radix-2 Cooley-Tukey, 迭代实现
 // ---------------------------------------------------------------------------
-void BeatDetector::fft(std::vector<float>& real, std::vector<float>& imag) {
+void BeatDetector::fft(vector<float>& real, vector<float>& imag) {
     int n = static_cast<int>(real.size());
     if (n <= 1) return;
 
@@ -62,16 +63,16 @@ void BeatDetector::fft(std::vector<float>& real, std::vector<float>& imag) {
             j ^= bit;
         j ^= bit;
         if (i < j) {
-            std::swap(real[i], real[j]);
-            std::swap(imag[i], imag[j]);
+            swap(real[i], real[j]);
+            swap(imag[i], imag[j]);
         }
     }
 
     // 蝶形运算
     for (int len = 2; len <= n; len <<= 1) {
         float angle = -2.0f * 3.14159265358979f / len;
-        float wReal = std::cos(angle);
-        float wImag = std::sin(angle);
+        float wReal = cos(angle);
+        float wImag = sin(angle);
         for (int i = 0; i < n; i += len) {
             float curReal = 1.0f;
             float curImag = 0.0f;
@@ -95,10 +96,10 @@ void BeatDetector::fft(std::vector<float>& real, std::vector<float>& imag) {
 // ---------------------------------------------------------------------------
 // Hann 窗
 // ---------------------------------------------------------------------------
-void BeatDetector::applyHannWindow(std::vector<float>& samples) {
+void BeatDetector::applyHannWindow(vector<float>& samples) {
     int n = static_cast<int>(samples.size());
     for (int i = 0; i < n; i++) {
-        float multiplier = 0.5f * (1.0f - std::cos(2.0f * 3.14159265358979f * i / (n - 1)));
+        float multiplier = 0.5f * (1.0f - cos(2.0f * 3.14159265358979f * i / (n - 1)));
         samples[i] *= multiplier;
     }
 }
@@ -106,8 +107,8 @@ void BeatDetector::applyHannWindow(std::vector<float>& samples) {
 // ---------------------------------------------------------------------------
 // 频段能量计算
 // ---------------------------------------------------------------------------
-void BeatDetector::computeBandEnergies(const std::vector<float>& real,
-                                        const std::vector<float>& imag,
+void BeatDetector::computeBandEnergies(const vector<float>& real,
+                                        const vector<float>& imag,
                                         float sampleRate,
                                         float bandEnergies[4]) {
     int n = static_cast<int>(real.size());
@@ -118,8 +119,8 @@ void BeatDetector::computeBandEnergies(const std::vector<float>& real,
         float lowFreq = BAND_EDGES[b];
         float highFreq = BAND_EDGES[b + 1];
 
-        int startBin = std::max(1, static_cast<int>(lowFreq / binWidth));
-        int endBin = std::min(static_cast<int>(highFreq / binWidth), n / 2);
+        int startBin = max(1, static_cast<int>(lowFreq / binWidth));
+        int endBin = min(static_cast<int>(highFreq / binWidth), n / 2);
 
         for (int i = startBin; i <= endBin; i++) {
             float mag2 = real[i] * real[i] + imag[i] * imag[i];
@@ -138,7 +139,7 @@ void BeatDetector::computeBandEnergies(const std::vector<float>& real,
 // 立体声 → 单声道
 // ---------------------------------------------------------------------------
 int BeatDetector::convertToMono(const int16_t* buffer, int numSamples,
-                                 int channelCount, std::vector<float>& monoOut) {
+                                 int channelCount, vector<float>& monoOut) {
     int frameCount = numSamples / channelCount;
     monoOut.resize(frameCount);
 
@@ -156,7 +157,7 @@ int BeatDetector::convertToMono(const int16_t* buffer, int numSamples,
 // ---------------------------------------------------------------------------
 // 核心：谱面生成
 // ---------------------------------------------------------------------------
-Chart BeatDetector::generate(const std::string& audioFilePath) {
+Chart BeatDetector::generate(const string& audioFilePath) {
     Chart chart;
     chart.songName = audioFilePath;
     chart.bpm = 0.0;
@@ -165,7 +166,7 @@ Chart BeatDetector::generate(const std::string& audioFilePath) {
     // 打开音频文件
     sf::InputSoundFile file;
     if (!file.openFromFile(audioFilePath)) {
-        std::cerr << "[BeatDetector] 无法打开音频文件: " << audioFilePath << std::endl;
+        cerr << "[BeatDetector] 无法打开音频文件: " << audioFilePath << endl;
         return chart;
     }
 
@@ -174,31 +175,31 @@ Chart BeatDetector::generate(const std::string& audioFilePath) {
     unsigned int channelCount = file.getChannelCount();
 
     if (totalFrames <= 0 || sampleRate <= 0) {
-        std::cerr << "[BeatDetector] 音频数据无效" << std::endl;
+        cerr << "[BeatDetector] 音频数据无效" << endl;
         return chart;
     }
 
     chart.duration = static_cast<double>(totalFrames) / sampleRate;
 
-    std::cout << "[BeatDetector] 音频加载成功" << std::endl;
-    std::cout << "  采样率: " << sampleRate << " Hz" << std::endl;
-    std::cout << "  声道数: " << channelCount << std::endl;
-    std::cout << "  时长: " << chart.duration << " 秒" << std::endl;
-    std::cout << "  难度: "
+    cout << "[BeatDetector] 音频加载成功" << endl;
+    cout << "  采样率: " << sampleRate << " Hz" << endl;
+    cout << "  声道数: " << channelCount << endl;
+    cout << "  时长: " << chart.duration << " 秒" << endl;
+    cout << "  难度: "
               << (m_difficulty == Difficulty::Easy ? "Easy" :
                   m_difficulty == Difficulty::Normal ? "Normal" : "Hard")
               << " (threshold=" << m_threshold << ", minInterval=" << m_minInterval << "s)"
-              << std::endl;
+              << endl;
 
     // 每个频段独立的状态
     BandState bands[4];
 
     // 读取缓冲区
     int samplesPerWindow = m_windowSize * channelCount;
-    std::vector<int16_t> buffer(samplesPerWindow);
-    std::vector<float> monoBuf;
-    std::vector<float> fftReal(m_windowSize);
-    std::vector<float> fftImag(m_windowSize);
+    vector<int16_t> buffer(samplesPerWindow);
+    vector<float> monoBuf;
+    vector<float> fftReal(m_windowSize);
+    vector<float> fftImag(m_windowSize);
 
     int64_t framesRead = 0;
     int windowIndex = 0;
@@ -207,7 +208,7 @@ Chart BeatDetector::generate(const std::string& audioFilePath) {
     float globalAvgEnergy = 0.0f;
     int globalWindowCount = 0;
 
-    std::cout << "[BeatDetector] 开始 FFT 频段分析..." << std::endl;
+    cout << "[BeatDetector] 开始 FFT 频段分析..." << endl;
 
     while (framesRead < totalFrames) {
         int64_t read = file.read(buffer.data(), samplesPerWindow);
@@ -225,8 +226,8 @@ Chart BeatDetector::generate(const std::string& audioFilePath) {
         }
 
         // ---- FFT 分析 ----
-        std::copy(monoBuf.begin(), monoBuf.end(), fftReal.begin());
-        std::fill(fftImag.begin(), fftImag.end(), 0.0f);
+        copy(monoBuf.begin(), monoBuf.end(), fftReal.begin());
+        fill(fftImag.begin(), fftImag.end(), 0.0f);
         applyHannWindow(fftReal);
         fft(fftReal, fftImag);
 
@@ -266,7 +267,7 @@ Chart BeatDetector::generate(const std::string& audioFilePath) {
             }
 
             // 自适应 sustain 阈值
-            float sustainThreshold = std::max(ABSOLUTE_MIN_ENERGY * 0.5f,
+            float sustainThreshold = max(ABSOLUTE_MIN_ENERGY * 0.5f,
                                                avgEnergy * SUSTAIN_RATIO);
 
             // ---- 节拍检测 ----
@@ -306,10 +307,10 @@ Chart BeatDetector::generate(const std::string& audioFilePath) {
 
         // 进度
         if (windowIndex % 5000 == 0) {
-            std::cout << "  [" << windowIndex << "] t=" << currentTime << "s"
+            cout << "  [" << windowIndex << "] t=" << currentTime << "s"
                       << " bands=[" << bandEnergies[0] << "," << bandEnergies[1]
                       << "," << bandEnergies[2] << "," << bandEnergies[3] << "]"
-                      << std::endl;
+                      << endl;
         }
 
         windowIndex++;
@@ -341,12 +342,12 @@ Chart BeatDetector::generate(const std::string& audioFilePath) {
         }
     }
 
-    std::cout << "[BeatDetector] 分析完成" << std::endl;
-    std::cout << "  Band 0 (20-200Hz,   Bass):    " << bands[0].beatTimes.size() << " notes" << std::endl;
-    std::cout << "  Band 1 (200-800Hz,  Low-Mid): " << bands[1].beatTimes.size() << " notes" << std::endl;
-    std::cout << "  Band 2 (800-3000Hz, High-Mid):" << bands[2].beatTimes.size() << " notes" << std::endl;
-    std::cout << "  Band 3 (3000+Hz,    High):    " << bands[3].beatTimes.size() << " notes" << std::endl;
-    std::cout << "  Total: " << totalBeats << " notes (" << totalHolds << " holds)" << std::endl;
+    cout << "[BeatDetector] 分析完成" << endl;
+    cout << "  Band 0 (20-200Hz,   Bass):    " << bands[0].beatTimes.size() << " notes" << endl;
+    cout << "  Band 1 (200-800Hz,  Low-Mid): " << bands[1].beatTimes.size() << " notes" << endl;
+    cout << "  Band 2 (800-3000Hz, High-Mid):" << bands[2].beatTimes.size() << " notes" << endl;
+    cout << "  Band 3 (3000+Hz,    High):    " << bands[3].beatTimes.size() << " notes" << endl;
+    cout << "  Total: " << totalBeats << " notes (" << totalHolds << " holds)" << endl;
 
     // ---- 生成 Note 列表 ----
     // 每个频段的 beat 直接映射到对应轨道 (band index = track index)
@@ -355,7 +356,7 @@ Chart BeatDetector::generate(const std::string& audioFilePath) {
         float duration;
         int track;
     };
-    std::vector<NoteCandidate> candidates;
+    vector<NoteCandidate> candidates;
 
     for (int b = 0; b < 4; b++) {
         const BandState& st = bands[b];
@@ -365,7 +366,7 @@ Chart BeatDetector::generate(const std::string& audioFilePath) {
     }
 
     // 按时间排序
-    std::sort(candidates.begin(), candidates.end(),
+    sort(candidates.begin(), candidates.end(),
               [](const NoteCandidate& a, const NoteCandidate& b) {
                   return a.time < b.time;
               });
@@ -406,7 +407,7 @@ Chart BeatDetector::generate(const std::string& audioFilePath) {
         NoteCandidate& c = candidates[i];
         if (c.time < 0) continue;
 
-        float noteEnd = c.time + std::max(c.duration, 0.03f) + MIN_GAP;
+        float noteEnd = c.time + max(c.duration, 0.03f) + MIN_GAP;
         int preferredTrack = c.track;
 
         // 检查是否需要换轨道
@@ -423,7 +424,7 @@ Chart BeatDetector::generate(const std::string& audioFilePath) {
             for (int t = 0; t < 4; t++) {
                 if (c.time >= trackFreeUntil[t]) {
                     // 该轨道空闲，打分：consecutive 越少越好
-                    int score = trackConsecutive[t] * 2 + std::abs(t - preferredTrack);
+                    int score = trackConsecutive[t] * 2 + abs(t - preferredTrack);
                     if (score < bestScore) {
                         bestScore = score;
                         bestTrack = t;
@@ -457,10 +458,10 @@ Chart BeatDetector::generate(const std::string& audioFilePath) {
     for (const auto& c : candidates) {
         if (c.time >= 0) trackNoteCount[c.track]++;
     }
-    std::cout << "[BeatDetector] final: T0=" << trackNoteCount[0]
+    cout << "[BeatDetector] final: T0=" << trackNoteCount[0]
               << " T1=" << trackNoteCount[1]
               << " T2=" << trackNoteCount[2]
-              << " T3=" << trackNoteCount[3] << std::endl;
+              << " T3=" << trackNoteCount[3] << endl;
 
     // ---- 生成最终 Note 列表 ----
     for (const auto& c : candidates) {
@@ -479,10 +480,10 @@ Chart BeatDetector::generate(const std::string& audioFilePath) {
     // BPM 估算
     if (!chart.notes.empty()) {
         chart.bpm = static_cast<double>(chart.notes.size()) / chart.duration * 60.0;
-        std::cout << "[BeatDetector] 最终谱面: " << chart.notes.size()
-                  << " 个音符, 估算 BPM: " << chart.bpm << std::endl;
+        cout << "[BeatDetector] 最终谱面: " << chart.notes.size()
+                  << " 个音符, 估算 BPM: " << chart.bpm << endl;
     } else {
-        std::cout << "[BeatDetector] 未检测到节拍，请尝试调低难度" << std::endl;
+        cout << "[BeatDetector] 未检测到节拍，请尝试调低难度" << endl;
     }
 
     return chart;

@@ -13,9 +13,10 @@
 // Win32 文件选择对话框
 #include <windows.h>
 #include <commdlg.h>
+using namespace std;
 
 // 打开文件选择对话框，返回用户选择的文件路径，取消则返回空字符串
-std::string openFileDialog() {
+string openFileDialog() {
     OPENFILENAMEA ofn;
     char filename[MAX_PATH];
 
@@ -31,7 +32,7 @@ std::string openFileDialog() {
     ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
 
     if (GetOpenFileNameA(&ofn)) {
-        return std::string(filename);
+        return string(filename);
     }
     return "";
 }
@@ -74,8 +75,8 @@ int main() {
     
     AppState state = AppState::Menu;
     sf::Clock clock;
-    std::future<Chart> detectionFuture;
-    std::string pendingMusicPath;
+    future<Chart> detectionFuture;
+    string pendingMusicPath;
     Difficulty currentDifficulty = Difficulty::Normal;
     
     while (window.isOpen()) {
@@ -88,22 +89,22 @@ int main() {
                 case AppState::Menu: {
                     MenuResult resultAction = menu.handleEvent(*event);
                     if (resultAction == MenuResult::StartGame) {
-                        std::string musicPath = openFileDialog();
+                        string musicPath = openFileDialog();
 
                         if (!musicPath.empty()) {
                             // 异步启动节拍检测，显示加载动画
-                            std::cout << "=== Auto Chart Generator ===" << std::endl;
-                            std::cout << "Loading: " << musicPath << std::endl;
+                            cout << "=== Auto Chart Generator ===" << endl;
+                            cout << "Loading: " << musicPath << endl;
                             pendingMusicPath = musicPath;
                             currentDifficulty = Difficulty::Normal;
-                            detectionFuture = std::async(std::launch::async, [musicPath]() {
+                            detectionFuture = async(launch::async, [musicPath]() {
                                 BeatDetector detector(Difficulty::Normal);
                                 return detector.generate(musicPath);
                             });
                             state = AppState::Loading;
                         } else {
                             // 用户取消，使用测试谱面
-                            std::cout << "No file selected, using test chart." << std::endl;
+                            cout << "No file selected, using test chart." << endl;
                             game.loadChart(testChart, "");
                             game.start();
                             state = AppState::Game;
@@ -126,7 +127,7 @@ int main() {
                         Difficulty selectedDifficulty = confirm.getDifficulty();
                         if (selectedDifficulty != currentDifficulty) {
                             // 难度变更，用新难度重新生成谱面（同步，FFT 很快）
-                            std::cout << "[GameMain] Difficulty changed, regenerating..." << std::endl;
+                            cout << "[GameMain] Difficulty changed, regenerating..." << endl;
                             currentDifficulty = selectedDifficulty;
                             BeatDetector detector(currentDifficulty);
                             Chart regenerated = detector.generate(pendingMusicPath);
@@ -177,20 +178,20 @@ int main() {
                 loading.draw();
                 // 检查异步检测是否完成
                 if (detectionFuture.valid()) {
-                    auto status = detectionFuture.wait_for(std::chrono::milliseconds(0));
-                    if (status == std::future_status::ready) {
+                    auto status = detectionFuture.wait_for(chrono::milliseconds(0));
+                    if (status == future_status::ready) {
                         Chart generatedChart;
                         try {
                             generatedChart = detectionFuture.get();
-                        } catch (const std::exception& e) {
-                            std::cerr << "Beat detection failed: " << e.what() << std::endl;
+                        } catch (const exception& e) {
+                            cerr << "Beat detection failed: " << e.what() << endl;
                         }
 
                         if (!generatedChart.notes.empty()) {
-                            std::cout << "Chart generated with "
-                                      << generatedChart.notes.size() << " notes." << std::endl;
+                            cout << "Chart generated with "
+                                      << generatedChart.notes.size() << " notes." << endl;
                         } else {
-                            std::cout << "No beats detected, using test chart." << std::endl;
+                            cout << "No beats detected, using test chart." << endl;
                             generatedChart = testChart;
                         }
 
