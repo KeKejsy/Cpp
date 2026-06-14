@@ -21,7 +21,7 @@ struct Note {
 
 struct Chart {
     string songName;
-    double bpm;
+    double noteDensity;  // Notes Per Minute (NPM)
     double duration;
     vector<Note> notes;
 };

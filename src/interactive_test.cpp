@@ -27,7 +27,7 @@ int main() {
     // 创建测试谱面
     Chart testChart;
     testChart.songName = "测试歌曲";
-    testChart.bpm = 120.0;
+    testChart.noteDensity = 120.0;
     testChart.duration = 30.0;
 
     // 生成音符：每0.5秒一个，循环4个轨道

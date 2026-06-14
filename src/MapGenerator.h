@@ -8,8 +8,10 @@
 using namespace std;
 
 // MapGenerator - 自动谱面生成器
-// 基于 FFT 频段能量分析：将音频按频率拆分为 4 个频段，每个频段独立检测节拍，
-// 频段直接映射到游戏轨道（低频→轨道0, 中低频→轨道1, 中高频→轨道2, 高频→轨道3）
+// 基于 FFT 频段 Spectral Flux（频谱通量）分析：将音频按频率拆分为 4 个频段，
+// 每个频段独立检测能量变化（而非能量大小），频段直接映射到游戏轨道
+// （低频→轨道0, 中低频→轨道1, 中高频→轨道2, 高频→轨道3）
+// Spectral Flux 突出鼓点、镲片、钢琴击键等瞬态，压制持续人声
 class MapGenerator {
 public:
     MapGenerator();
@@ -22,12 +24,14 @@ public:
     void setDifficulty(Difficulty difficulty);
 
 private:
-    // 频段状态：每个频段独立追踪能量历史和 hold 状态
+    // 频段状态：每个频段独立追踪 flux 历史、能量历史和 hold 状态
     struct BandState {
-        deque<float> energyHistory;
-        float historySum = 0.0;
+        deque<float> fluxHistory;       // flux = max(0, energy - lastEnergy)
+        float fluxHistorySum = 0.0;     // flux 历史滑动和
+        float lastEnergy = 0.0;         // 上一窗口能量，用于计算 flux
         bool inHold = false;
         float holdStartTime = 0.0;
+        float holdStartEnergy = 0.0;    // 起音时能量，用于判定持续结束
         float lastBeatTime = -1.0;
         vector<float> beatTimes;
         vector<float> beatDurations;
@@ -55,20 +59,20 @@ private:
 
     // ---- 可调参数 ----
     int m_windowSize;           // 窗口大小（采样点数），默认 1024
-    int m_historySize;          // 历史窗口数，默认 43（约 1 秒 @44100Hz）
-    float m_threshold;          // 能量阈值倍数
+    int m_historySize;          // flux 历史窗口数，默认 43
+    float m_threshold;          // flux 阈值倍数（相对 avgFlux）
     float m_minInterval;        // 最小节拍间隔（秒）
     Difficulty m_difficulty;
 
     // 频段边界 (Hz) — 4 个频段 → 4 个轨道
-    // Band 0: 20-200 Hz   → Track 0 (D)  低频：底鼓、贝斯
-    // Band 1: 200-800 Hz  → Track 1 (F)  中低频：钢琴低音、节奏吉他
-    // Band 2: 800-3000 Hz → Track 2 (J)  中高频：人声、主旋律
-    // Band 3: 3000+ Hz    → Track 3 (K)  高频：镲片、hi-hat
+    // Band 0: 20-150 Hz   → Track 0 (D)  低频：底鼓、贝斯
+    // Band 1: 150-500 Hz  → Track 1 (F)  中低频：钢琴低音、节奏吉他
+    // Band 2: 500-2000 Hz → Track 2 (J)  中高频：人声、主旋律
+    // Band 3: 2000-8000 Hz→ Track 3 (K)  高频：镲片、hi-hat
     static const float BAND_EDGES[5];
 
     // Hold 检测参数
     static const float SUSTAIN_RATIO;       // 持续阈值 = 平均能量 × 此值
     static const float MIN_HOLD_DURATION;   // 最短 hold 时长（秒）
-    static const float ABSOLUTE_MIN_ENERGY; // 绝对最小能量，避免静音误触
+    static const float ABSOLUTE_MIN_ENERGY; // 绝对最小能量/flux，避免静音误触
 };

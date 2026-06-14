@@ -53,7 +53,7 @@ int main() {
     
     Chart testChart;
     testChart.songName = "Test Song";
-    testChart.bpm = 120.0;
+    testChart.noteDensity = 120.0;
     testChart.duration = 30.0;
     
     for (int i = 0; i < 60; i++) {

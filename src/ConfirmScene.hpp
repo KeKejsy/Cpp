@@ -59,7 +59,7 @@ public:
 
         stringstream ss;
         ss << "Song: " << chart.songName << "\n\n";
-        ss << "BPM: " << fixed << setprecision(1) << chart.bpm << " (estimated)\n";
+        ss << "Note Density: " << fixed << setprecision(1) << chart.noteDensity << " NPM\n";
         ss << "Duration: " << minutes << ":" << setw(2) << setfill('0') << seconds << "\n\n";
         ss << "Total Notes: " << totalNotes << "\n";
         ss << "  Tap:  " << tapCount << "\n";
