@@ -65,10 +65,10 @@ private:
     // Band 1: 200-800 Hz  → Track 1 (F)  中低频：钢琴低音、节奏吉他
     // Band 2: 800-3000 Hz → Track 2 (J)  中高频：人声、主旋律
     // Band 3: 3000+ Hz    → Track 3 (K)  高频：镲片、hi-hat
-    static constexpr float BAND_EDGES[5] = {20.0f, 200.0f, 800.0f, 3000.0f, 20000.0f};
+    static const float BAND_EDGES[5];
 
     // Hold 检测参数
-    static constexpr float SUSTAIN_RATIO = 0.25f;      // 持续阈值 = 平均能量 × 此值
-    static constexpr float MIN_HOLD_DURATION = 0.25f;   // 最短 hold 时长（秒）
-    static constexpr float ABSOLUTE_MIN_ENERGY = 0.0005f; // 绝对最小能量，避免静音误触
+    static const float SUSTAIN_RATIO;       // 持续阈值 = 平均能量 × 此值
+    static const float MIN_HOLD_DURATION;   // 最短 hold 时长（秒）
+    static const float ABSOLUTE_MIN_ENERGY; // 绝对最小能量，避免静音误触
 };

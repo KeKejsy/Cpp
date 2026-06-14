@@ -7,6 +7,12 @@
 #include <algorithm>
 using namespace std;
 
+// 静态常量定义（在 .h 中声明，这里赋值）
+const float BeatDetector::BAND_EDGES[5] = {20.0f, 200.0f, 800.0f, 3000.0f, 20000.0f};
+const float BeatDetector::SUSTAIN_RATIO = 0.25f;
+const float BeatDetector::MIN_HOLD_DURATION = 0.25f;
+const float BeatDetector::ABSOLUTE_MIN_ENERGY = 0.0005f;
+
 // ---------------------------------------------------------------------------
 // 构造 / 难度
 // ---------------------------------------------------------------------------
@@ -337,8 +343,8 @@ Chart BeatDetector::generate(const string& audioFilePath) {
     int totalHolds = 0;
     for (int b = 0; b < 4; b++) {
         totalBeats += static_cast<int>(bands[b].beatTimes.size());
-        for (float d : bands[b].beatDurations) {
-            if (d > 0.0f) totalHolds++;
+        for (size_t j = 0; j < bands[b].beatDurations.size(); j++) {
+            if (bands[b].beatDurations[j] > 0.0f) totalHolds++;
         }
     }
 
@@ -397,8 +403,8 @@ Chart BeatDetector::generate(const string& audioFilePath) {
     // 对于重叠的音符：优先换轨道，无可用的轨道则跳过该音符
     // 对于连续过多的音符：优先换轨道，无可用的轨道则允许继续（重叠 > 单调）
 
-    constexpr float MIN_GAP = 0.06f;          // 同轨道相邻音符最小间隔
-    constexpr int MAX_CONSECUTIVE = 3;        // 同轨道最大连续音符数（超过则尝试换轨道）
+    const float MIN_GAP = 0.06f;          // 同轨道相邻音符最小间隔
+    const int MAX_CONSECUTIVE = 3;        // 同轨道最大连续音符数（超过则尝试换轨道）
 
     float trackFreeUntil[4] = {0, 0, 0, 0};
     int trackConsecutive[4] = {0, 0, 0, 0};
@@ -455,8 +461,8 @@ Chart BeatDetector::generate(const string& audioFilePath) {
 
     // 轨道分配统计
     int trackNoteCount[4] = {0, 0, 0, 0};
-    for (const auto& c : candidates) {
-        if (c.time >= 0) trackNoteCount[c.track]++;
+    for (size_t i = 0; i < candidates.size(); i++) {
+        if (candidates[i].time >= 0) trackNoteCount[candidates[i].track]++;
     }
     cout << "[BeatDetector] final: T0=" << trackNoteCount[0]
               << " T1=" << trackNoteCount[1]
@@ -464,14 +470,14 @@ Chart BeatDetector::generate(const string& audioFilePath) {
               << " T3=" << trackNoteCount[3] << endl;
 
     // ---- 生成最终 Note 列表 ----
-    for (const auto& c : candidates) {
-        if (c.time < 0) continue;
+    for (size_t i = 0; i < candidates.size(); i++) {
+        if (candidates[i].time < 0) continue;
 
         Note note;
-        note.time = c.time;
-        note.track = c.track;
-        note.duration = c.duration;
-        note.type = (c.duration > 0.0f) ? 1 : 0;
+        note.time = candidates[i].time;
+        note.track = candidates[i].track;
+        note.duration = candidates[i].duration;
+        note.type = (candidates[i].duration > 0.0f) ? 1 : 0;
         note.hit = false;
         note.hitTime = 0.0;
         chart.notes.push_back(note);

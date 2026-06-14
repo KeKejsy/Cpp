@@ -11,6 +11,8 @@
 #include "ConfirmScene.hpp"
 
 // Win32 文件选择对话框
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN   // 精简 windows.h，避免 min/max/byte 等宏冲突
 #include <windows.h>
 #include <commdlg.h>
 using namespace std;
