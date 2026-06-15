@@ -64,7 +64,7 @@ void MapGenerator::setDifficulty(Difficulty difficulty)
 
 #pragma region FFT
 void MapGenerator::fft(vector<float>& real, vector<float>& imag) {
-    int n = static_cast<int>(real.size());
+    int n = real.size();
     if (n <= 1) return;
 
     // 位逆序重排
@@ -109,7 +109,7 @@ void MapGenerator::fft(vector<float>& real, vector<float>& imag) {
 #pragma region Hann窗
 void MapGenerator::applyHannWindow(vector<float>& samples) 
 {
-    int n = static_cast<int>(samples.size());
+    int n = samples.size();
     for (int i = 0; i < n; i++) 
     {
         float multiplier = 0.5 * (1.0 - cos(2 * 3.14159265358979 * i / (n - 1)));
@@ -128,7 +128,7 @@ void MapGenerator::getBandEnergies
     float bandEnergies[4]
 ) 
 {
-    int n = static_cast<int>(real.size());
+    int n = real.size();
     float binWidth = sampleRate / n;
 
     for (int b = 0; b < 4; b++)
@@ -137,8 +137,8 @@ void MapGenerator::getBandEnergies
         float lowFreq = BAND_EDGES[b];
         float highFreq = BAND_EDGES[b + 1];
 
-        int startBin = max(1, static_cast<int>(lowFreq / binWidth));
-        int endBin = min(static_cast<int>(highFreq / binWidth), n / 2);
+        int startBin = max(1, (int)(lowFreq / binWidth));
+        int endBin = min((int)(highFreq / binWidth), n / 2);
 
         for (int i = startBin; i <= endBin; i++) 
         {
@@ -229,7 +229,7 @@ Chart MapGenerator::generate(const string& audioFilePath) {
 
     //转换为单声道
     vector<float> mono;
-    int frameCount = translate(allSamples.data(), static_cast<int>(actuallyRead),
+    int frameCount = translate(allSamples.data(), actuallyRead,
                                     channelCount, mono);
 
     cout << "[MapGenerator] 读取完成，共 " << frameCount << " 帧" << endl;
@@ -274,13 +274,13 @@ Chart MapGenerator::generate(const string& audioFilePath) {
             // 更新 flux 滑动历史
             st.fluxHistory.push_back(flux);
             st.fluxHistorySum += flux;
-            while (static_cast<int>(st.fluxHistory.size()) > m_historySize) {
+            while (st.fluxHistory.size() > m_historySize) {
                 st.fluxHistorySum -= st.fluxHistory.front();
                 st.fluxHistory.pop_front();
             }
 
             // 历史不够 → 跳过
-            if (static_cast<int>(st.fluxHistory.size()) < m_historySize) {
+            if (st.fluxHistory.size() < m_historySize) {
                 st.lastFlux = flux;
                 continue;
             }
@@ -351,7 +351,7 @@ Chart MapGenerator::generate(const string& audioFilePath) {
         if (windowIndex % 200 == 0) {
             float af[4] = {0, 0, 0, 0};
             for (int b = 0; b < 4; b++) {
-                int sz = static_cast<int>(bands[b].fluxHistory.size());
+                int sz = bands[b].fluxHistory.size();
                 if (sz > 0) af[b] = bands[b].fluxHistorySum / sz;
             }
             cout << "  [" << windowIndex << "] t=" << currentTime << "s"
@@ -382,7 +382,7 @@ Chart MapGenerator::generate(const string& audioFilePath) {
     int totalBeats = 0;
     int totalHolds = 0;
     for (int b = 0; b < 4; b++) {
-        totalBeats += static_cast<int>(bands[b].beatTimes.size());
+        totalBeats += bands[b].beatTimes.size();
         for (size_t j = 0; j < bands[b].beatDurations.size(); j++) {
             if (bands[b].beatDurations[j] > 0.0) totalHolds++;
         }

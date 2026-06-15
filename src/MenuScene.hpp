@@ -29,11 +29,11 @@ public:
         if (const auto* keyEvent = event.getIf<sf::Event::KeyPressed>()) {
             switch (keyEvent->code) {
                 case sf::Keyboard::Key::Up:
-                    m_selectedIndex = (m_selectedIndex - 1 + static_cast<int>(m_items.size())) % static_cast<int>(m_items.size());
+                    m_selectedIndex = (m_selectedIndex - 1 + m_items.size()) % m_items.size();
                     updateButtonColors();
                     break;
                 case sf::Keyboard::Key::Down:
-                    m_selectedIndex = (m_selectedIndex + 1) % static_cast<int>(m_items.size());
+                    m_selectedIndex = (m_selectedIndex + 1) % m_items.size();
                     updateButtonColors();
                     break;
                 case sf::Keyboard::Key::Enter:
@@ -48,8 +48,8 @@ public:
             sf::Vector2f mousePos(mouseEvent->position.x, mouseEvent->position.y);
             for (size_t i = 0; i < m_items.size(); i++) {
                 if (m_items[i].background.getGlobalBounds().contains(mousePos)) {
-                    if (static_cast<int>(i) != m_selectedIndex) {
-                        m_selectedIndex = static_cast<int>(i);
+                    if (i != m_selectedIndex) {
+                        m_selectedIndex = i;
                         updateButtonColors();
                     }
                     break;
@@ -79,9 +79,9 @@ public:
         
         float intensity = 0.6 + 0.4 * (m_titleFlashTimer / 0.8);
         sf::Color titleColor(
-            static_cast<unsigned char>(100 * intensity),
-            static_cast<unsigned char>(200 * intensity),
-            static_cast<unsigned char>(255 * intensity)
+            100 * intensity,
+            200 * intensity,
+            255 * intensity
         );
         m_titleText.setFillColor(titleColor);
         
@@ -190,7 +190,7 @@ private:
     
     void updateButtonColors() {
         for (size_t i = 0; i < m_items.size(); i++) {
-            if (static_cast<int>(i) == m_selectedIndex) {
+            if (i == m_selectedIndex) {
                 m_items[i].background.setFillColor(sf::Color(100, 100, 200));
                 m_items[i].background.setOutlineColor(sf::Color::Yellow);
                 m_items[i].background.setOutlineThickness(3.0);
@@ -213,9 +213,9 @@ private:
             float radius = 2.0 + rand() % 3;
             p.shape.setRadius(radius);
             p.shape.setFillColor(sf::Color(
-                static_cast<unsigned char>(100 + rand() % 155),
-                static_cast<unsigned char>(100 + rand() % 155),
-                static_cast<unsigned char>(200 + rand() % 55),
+                100 + rand() % 155,
+                100 + rand() % 155,
+                200 + rand() % 55,
                 100
             ));
             

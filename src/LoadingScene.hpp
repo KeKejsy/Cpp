@@ -49,9 +49,9 @@ public:
         }
         float intensity = 0.5 + 0.5 * sin(m_titleFlashTimer / 1.2 * 3.14159 * 2.0);
         sf::Color titleColor(
-            static_cast<unsigned char>(180 * intensity),
-            static_cast<unsigned char>(220 * intensity),
-            static_cast<unsigned char>(255 * intensity)
+            180 * intensity,
+            220 * intensity,
+            255 * intensity
         );
         m_titleText.setFillColor(titleColor);
     }

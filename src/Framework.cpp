@@ -69,7 +69,7 @@ void Framework::update(double currentTime) {
                 // hold 音符：尾部到达判定线时才 miss
                 // 安全检查：如果正被按住，由 auto-complete 处理，这里不抢
                 if (currentTime >= note.time + note.duration) {
-                    int noteIdx = static_cast<int>(&note - &m_chart.notes[0]);
+                    int noteIdx = &note - &m_chart.notes[0];
                     bool isActive = false;
                     for (int t = 0; t < 4; t++) {
                         if (m_activeHoldIndex[t] == noteIdx) {
@@ -144,7 +144,7 @@ void Framework::handleKeyPress(int track) {
 
     if (closestNote->type == 1 && closestNote->duration > 0.0) {
         // hold 音符：按下时标记为正在按住，暂不结算
-        m_activeHoldIndex[track] = static_cast<int>(closestNote - &m_chart.notes[0]);
+        m_activeHoldIndex[track] = closestNote - &m_chart.notes[0];
         m_holdJudgment[track] = judgment;
     } else {
         // tap 音符：直接结算

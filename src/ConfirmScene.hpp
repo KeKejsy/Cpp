@@ -43,11 +43,11 @@ public:
                 tapCount++;
             }
         }
-        int totalNotes = static_cast<int>(chart.notes.size());
+        int totalNotes = chart.notes.size();
 
         // 格式化时�? (�? �? m:ss)
-        int minutes = static_cast<int>(chart.duration) / 60;
-        int seconds = static_cast<int>(chart.duration) % 60;
+        int minutes = chart.duration / 60;
+        int seconds = (int)chart.duration % 60;
 
         // 每轨道音符分�?
         int trackCounts[4] = {0, 0, 0, 0};
@@ -132,8 +132,8 @@ public:
             // 检查按�?
             for (size_t i = 0; i < m_buttons.size(); i++) {
                 if (m_buttons[i].background.getGlobalBounds().contains(mousePos)) {
-                    if (static_cast<int>(i) != m_selectedIndex) {
-                        m_selectedIndex = static_cast<int>(i);
+                    if (i != m_selectedIndex) {
+                        m_selectedIndex = i;
                         updateSelection();
                     }
                     break;
@@ -308,7 +308,7 @@ private:
 
     void updateSelection() {
         for (size_t i = 0; i < m_buttons.size(); i++) {
-            if (static_cast<int>(i) == m_selectedIndex) {
+            if (i == m_selectedIndex) {
                 m_buttons[i].background.setFillColor(sf::Color(100, 100, 200));
                 m_buttons[i].background.setOutlineColor(sf::Color::Yellow);
                 m_buttons[i].background.setOutlineThickness(3.0);

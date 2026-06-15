@@ -237,7 +237,7 @@ private:
 
                     float alpha = 1.0 - elapsed / 0.25;
                     sf::Color fadeColor(noteColor.r, noteColor.g, noteColor.b,
-                                        static_cast<unsigned char>(180 * alpha));
+                                        180 * alpha);
                     sf::RectangleShape noteShape(sf::Vector2f(noteWidth, 30.0));
                     noteShape.setPosition(sf::Vector2f(noteX, m_trackY));
                     noteShape.setFillColor(fadeColor);
@@ -269,9 +269,9 @@ private:
                     double elapsed = currentTime - note.hitTime;
                     if (elapsed > 0.3) continue;
 
-                    float alpha = 1.0 - static_cast<float>(elapsed / 0.3);
+                    float alpha = 1.0 - elapsed / 0.3;
                     sf::Color fadeColor(noteColor.r, noteColor.g, noteColor.b,
-                                        static_cast<unsigned char>(150 * alpha));
+                                        150 * alpha);
                     sf::RectangleShape noteShape(sf::Vector2f(noteWidth, 30.0));
                     noteShape.setPosition(sf::Vector2f(noteX, m_trackY - 15.0));
                     noteShape.setFillColor(fadeColor);
@@ -294,7 +294,7 @@ private:
                 if (holdHeight < 1.0) holdHeight = 1.0;
 
                 if (noteTailY < clipBottom && drawBottom > drawTop) {
-                    int noteIndex = static_cast<int>(&note - &notes[0]);
+                    int noteIndex = &note - &notes[0];
                     bool isBeingHeld = m_game.isNoteBeingHeld(noteIndex);
 
                     unsigned char barAlpha = isBeingHeld ? 200 : 100;
@@ -353,7 +353,7 @@ private:
         // 脉冲透明效果
         float fractional = m_countdownTimer - floor(m_countdownTimer);
         float alpha = 0.6 + 0.4 * sin(fractional * 3.14159);
-        countdownColor.a = static_cast<unsigned char>(255 * alpha);
+        countdownColor.a = 255 * alpha;
         text.setFillColor(countdownColor);
 
         m_window.draw(text);

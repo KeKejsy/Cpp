@@ -84,8 +84,8 @@ public:
             sf::Vector2f mousePos(mouseEvent->position.x, mouseEvent->position.y);
             for (size_t i = 0; i < m_buttons.size(); i++) {
                 if (m_buttons[i].background.getGlobalBounds().contains(mousePos)) {
-                    if (static_cast<int>(i) != m_selectedIndex) {
-                        m_selectedIndex = static_cast<int>(i);
+                    if (i != m_selectedIndex) {
+                        m_selectedIndex = i;
                         updateSelection(m_selectedIndex);
                     }
                     break;
@@ -209,7 +209,7 @@ private:
         m_selectedIndex = index;
         
         for (size_t i = 0; i < m_buttons.size(); i++) {
-            if (static_cast<int>(i) == m_selectedIndex) {
+            if (i == m_selectedIndex) {
                 m_buttons[i].background.setFillColor(sf::Color(100, 100, 200));
                 m_buttons[i].background.setOutlineColor(sf::Color::Yellow);
                 m_buttons[i].background.setOutlineThickness(3.0);
