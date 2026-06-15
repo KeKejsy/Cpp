@@ -76,7 +76,7 @@ public:
     const Chart& getChart() const { return m_chart; }
     const string& getMusicPath() const { return m_musicPath; }
     Difficulty getDifficulty() const {
-        return static_cast<Difficulty>(m_difficultyIndex);
+        return (Difficulty)m_difficultyIndex;
     }
 
     ConfirmResult handleEvent(const sf::Event& event) {

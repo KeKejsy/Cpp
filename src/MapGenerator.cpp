@@ -208,7 +208,7 @@ Chart MapGenerator::generate(const string& audioFilePath) {
         return chart;
     }
 
-    chart.duration = static_cast<double>(totalFrames) / sampleRate;
+    chart.duration = (double)totalFrames / sampleRate;
 
     cout << "[MapGenerator] 音频加载成功" << endl;
     cout << "  采样率: " << sampleRate << " Hz" << endl;
@@ -260,7 +260,7 @@ Chart MapGenerator::generate(const string& audioFilePath) {
         getBandEnergies(fftReal, fftImag, sampleRate, bandEnergies);
 
         // 窗口中心时刻
-        float currentTime = static_cast<float>(start + m_windowSize / 2) / sampleRate;
+        float currentTime = (float)(start + m_windowSize / 2) / sampleRate;
 
         // ---- 每个频段独立检测：Spectral Flux + 局部峰值 ----
         for (int b = 0; b < 4; b++) {
@@ -363,7 +363,7 @@ Chart MapGenerator::generate(const string& audioFilePath) {
     }
 
     // 处理循环结束时仍在 hold 的频段
-    float endTime = static_cast<float>(frameCount) / sampleRate;
+    float endTime = (float)frameCount / sampleRate;
     for (int b = 0; b < 4; b++) {
         BandState& st = bands[b];
         if (st.inHold) {
