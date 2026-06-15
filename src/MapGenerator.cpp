@@ -1,5 +1,6 @@
 #include "MapGenerator.h"
 #include <SFML/Audio.hpp>
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <ctime>
@@ -490,7 +491,7 @@ Chart MapGenerator::generate(const string& audioFilePath)
 
 
 #pragma region 轨道分配
-    const float MIN_GAP = 0.06;
+    const float MIN_GAP = 0.1;
     const int MAX_CONSECUTIVE = 3;
 
     float trackFreeUntil[4] = {0, 0, 0, 0};
@@ -505,7 +506,10 @@ Chart MapGenerator::generate(const string& audioFilePath)
         }
 
         float duration = c.duration;
-        if (duration < 0.03f) duration = 0.03f;
+        if (duration < 0.03) 
+        {
+            duration = 0.03;
+        }
         float noteEnd = c.time + duration + MIN_GAP;
         int preferredTrack = c.track;
 
