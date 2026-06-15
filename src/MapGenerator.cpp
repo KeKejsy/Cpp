@@ -68,26 +68,31 @@ void MapGenerator::fft(vector<float>& real, vector<float>& imag) {
     if (n <= 1) return;
 
     // 位逆序重排
-    for (int i = 1, j = 0; i < n; i++) {
+    for (int i = 1, j = 0; i < n; i++) 
+    {
         int bit = n >> 1;
         for (; (j & bit) != 0; bit >>= 1)
             j ^= bit;
         j ^= bit;
-        if (i < j) {
+        if (i < j) 
+        {
             swap(real[i], real[j]);
             swap(imag[i], imag[j]);
         }
     }
 
     // 蝶形运算
-    for (int len = 2; len <= n; len <<= 1) {
-        float angle = -2.0 * 3.14159265358979 / len;
+    for (int len = 2; len <= n; len <<= 1) 
+    {
+        float angle = -2 * 3.14159265358979 / len;
         float wReal = cos(angle);
         float wImag = sin(angle);
-        for (int i = 0; i < n; i += len) {
-            float curReal = 1.0;
-            float curImag = 0.0;
-            for (int j = 0; j < len / 2; j++) {
+        for (int i = 0; i < n; i += len) 
+        {
+            float curReal = 1;
+            float curImag = 0;
+            for (int j = 0; j < len / 2; j++) 
+            {
                 int u = i + j;
                 int v = i + j + len / 2;
                 float tReal = curReal * real[v] - curImag * imag[v];
@@ -138,9 +143,15 @@ void MapGenerator::getBandEnergies
         float highFreq = BAND_EDGES[b + 1];
 
         int startBin = (int)(lowFreq / binWidth);
-        if (startBin < 1) startBin = 1;
+        if (startBin < 1) 
+        {
+            startBin = 1;
+        }
         int endBin = (int)(highFreq / binWidth);
-        if (endBin > n / 2) endBin = n / 2;
+        if (endBin > n / 2) 
+        {
+            endBin = n / 2;
+        }
 
         for (int i = startBin; i <= endBin; i++) 
         {
@@ -175,7 +186,7 @@ int MapGenerator::translate
         float sum = 0;
         for (int j = 0; j < channelCount; j++) 
         {
-            sum += buffer[i * channelCount + j] / 32768.0;
+            sum += buffer[i * channelCount + j] / 32768;
         }
         result[i] = sum / channelCount;
     }
@@ -464,10 +475,11 @@ Chart MapGenerator::generate(const string& audioFilePath)
                   return a.time < b.time;
               });
 
-    // ---- Pass: 全局限流 ----
+
+
     // 跨轨道限制最小间隔，防止四个轨道交替形成连续连打
     // 同时刻音符（差值≈0）视为双押/多押，放行且不更新时间基准
-    float lastGlobalNoteTime = -1.0;
+    float lastGlobalNoteTime = -1;
     for (size_t i = 0; i < candidates.size(); i++) 
     {
         if (candidates[i].time < 0) 
@@ -478,7 +490,7 @@ Chart MapGenerator::generate(const string& audioFilePath)
         if (lastGlobalNoteTime >= 0 && gap > 0 && gap < m_globalMinInterval) 
         {
             // 严格晚于上一音符但间隔不足 → 删除
-            candidates[i].time = -1.0;
+            candidates[i].time = -1;
         } 
         else if (gap > 0) 
         {
@@ -540,7 +552,7 @@ Chart MapGenerator::generate(const string& audioFilePath)
             } 
             else if (overlapOnPreferred) 
             {
-                c.time = -1.0;
+                c.time = -1;
                 continue;
             }
         }
@@ -592,9 +604,9 @@ Chart MapGenerator::generate(const string& audioFilePath)
         note.time = candidates[i].time;
         note.track = candidates[i].track;
         note.duration = candidates[i].duration;
-        note.type = (candidates[i].duration > 0.0) ? 1 : 0;
+        note.type = (candidates[i].duration > 0) ? 1 : 0;
         note.hit = false;
-        note.hitTime = 0.0;
+        note.hitTime = 0;
         chart.notes.push_back(note);
     }
 #pragma endregion
@@ -604,7 +616,7 @@ Chart MapGenerator::generate(const string& audioFilePath)
 #pragma region 音符密度计算
     if (!chart.notes.empty()) 
     {
-        chart.noteDensity = chart.notes.size() / chart.duration * 60.0;
+        chart.noteDensity = chart.notes.size() / chart.duration * 60;
         cout << "[MapGenerator] 最终谱面: " << chart.notes.size()
                   << " 个音符, Note Density: " << fixed << setprecision(1)
                   << chart.noteDensity << " NPM" << endl;
