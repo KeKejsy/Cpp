@@ -54,6 +54,12 @@ private:
     int translate(const short* buffer, int sampleCount, int channelCount,
                       vector<float>& result);
 
+    // 结束一个 Hold，并记录到结果中
+    void finalizeHold(BandState& st, float endTime);
+
+    // 开始一个新的 Hold
+    void startHold(BandState& st, float currTime, float energy);
+
     // ---- 可调参数 ----
     int m_windowSize;           // 窗口大小（采样点数），默认 1024
     int m_historySize;          // flux 历史窗口数，默认 43

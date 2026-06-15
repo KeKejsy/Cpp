@@ -5,7 +5,6 @@
 #include <ctime>
 #include <iostream>
 #include <iomanip>
-#include <algorithm>
 using namespace std;
 
 
@@ -35,7 +34,7 @@ void MapGenerator::setDifficulty(Difficulty difficulty)
     {
         case Difficulty::Easy:
         {
-            m_threshold = 2.8;
+            m_threshold = 3.0;
             m_minInterval = 0.45;
             m_historySize = 60;
             m_globalMinInterval = 0.20;
@@ -43,7 +42,7 @@ void MapGenerator::setDifficulty(Difficulty difficulty)
         }
         case Difficulty::Normal:
         {
-            m_threshold = 2.0;
+            m_threshold = 2.5;
             m_minInterval = 0.28;
             m_historySize = 45;
             m_globalMinInterval = 0.12;
@@ -51,7 +50,7 @@ void MapGenerator::setDifficulty(Difficulty difficulty)
         }
         case Difficulty::Hard:
         {
-            m_threshold = 1.5;
+            m_threshold = 2.0;
             m_minInterval = 0.18;
             m_historySize = 30;
             m_globalMinInterval = 0.08;
@@ -137,8 +136,10 @@ void MapGenerator::getBandEnergies
         float lowFreq = BAND_EDGES[b];
         float highFreq = BAND_EDGES[b + 1];
 
-        int startBin = max(1, (int)(lowFreq / binWidth));
-        int endBin = min((int)(highFreq / binWidth), n / 2);
+        int startBin = (int)(lowFreq / binWidth);
+        if (startBin < 1) startBin = 1;
+        int endBin = (int)(highFreq / binWidth);
+        if (endBin > n / 2) endBin = n / 2;
 
         for (int i = startBin; i <= endBin; i++) 
         {
@@ -183,19 +184,48 @@ int MapGenerator::translate
 #pragma endregion
 
 
+#pragma region Hold处理
+void MapGenerator::finalizeHold(BandState& st, float endTime)
+{
+    float holdDuration = endTime - st.holdStartTime;
+
+    st.beatTimes.push_back(st.holdStartTime);
+
+    if (holdDuration >= MIN_HOLD_DURATION)
+    {
+        st.beatDurations.push_back(holdDuration);
+    }
+    else
+    {
+        st.beatDurations.push_back(0.0f);
+    }
+}
+
+
+void MapGenerator::startHold(BandState& st, float currTime, float energy)
+{
+    st.inHold = true;
+    st.holdStartTime = currTime;
+    st.holdStartEnergy = energy;
+    st.lastBeatTime = currTime;
+    st.waitingReset = true;
+}
+#pragma endregion
+
+
 #pragma region 谱面生成
 Chart MapGenerator::generate(const string& audioFilePath) 
 {
     Chart chart;
     chart.songName = audioFilePath;
-    chart.noteDensity = 0.0;
-    chart.duration = 0.0;
+    chart.noteDensity = 0;
+    chart.duration = 0;
 
-    //打开文件
+   
     sf::InputSoundFile file;
     if (!file.openFromFile(audioFilePath)) 
     {
-        cout << "[MapGenerator] 无法打开音频文件: " << audioFilePath << endl;
+        cout << "谱面生成器无法打开音频文件: " << audioFilePath << endl;
         return chart;
     }
 
@@ -205,75 +235,79 @@ Chart MapGenerator::generate(const string& audioFilePath)
 
     if (totalFrames <= 0 || sampleRate <= 0)
     {
-        cout << "[MapGenerator] 音频数据无效" << endl;
+        cout << "音频数据无效" << endl;
         return chart;
     }
 
     chart.duration = (double)totalFrames / sampleRate;
 
-    cout << "[MapGenerator] 音频加载成功" << endl;
+    cout << "音频加载成功" << endl;
     cout << "  采样率: " << sampleRate << " Hz" << endl;
     cout << "  声道数: " << channelCount << endl;
     cout << "  时长: " << chart.duration << " 秒" << endl;
     cout << "  难度: "
               << (m_difficulty == Difficulty::Easy ? "Easy" :
                   m_difficulty == Difficulty::Normal ? "Normal" : "Hard")
-              << " (threshold=" << m_threshold
-              << ", minInterval=" << m_minInterval << "s"
-              << ", globalMinInterval=" << m_globalMinInterval << "s)"
+              << " (检测阈值=" << m_threshold
+              << ", 单轨最小间隔=" << m_minInterval << "s"
+              << ", 全局最小间隔=" << m_globalMinInterval << "s)"
               << endl;
 
     //读取音频
-    long long totalSamples = totalFrames * channelCount;
-    vector<short> allSamples(totalSamples);
-    long long actuallyRead = file.read(allSamples.data(), totalSamples);
+
+    vector<short> allSamples(totalFrames * channelCount);
+    long long actuallyRead = file.read(allSamples.data(), totalFrames * channelCount);
 
     //转换为单声道
     vector<float> mono;
     int frameCount = translate(allSamples.data(), actuallyRead, channelCount, mono);
 
-    cout << "[MapGenerator] 读取完成，共 " << frameCount << " 帧" << endl;
+    cout << "谱面生成器读取完成，共 " << frameCount << " 帧" << endl;
 
-    // ---- 每个频段独立的状态 ----
+    
     BandState bands[4];
 
-    // FFT 缓冲区
+   
     vector<float> fftReal(m_windowSize);
     vector<float> fftImag(m_windowSize);
 
-    int stepSize = m_windowSize / 2;  // 50% overlap
+    int stepSize = m_windowSize / 2;  
     int windowIndex = 0;
 
-    cout << "[MapGenerator] 开始 Spectral Flux 分析 (50% overlap)..." << endl;
+    cout << "谱面生成器开始谱通量分析 (重叠率50％)..." << endl;
 
     for (int start = 0; start + m_windowSize <= frameCount; start += stepSize) 
     {
-        // 复制窗口样本
+       
         copy(mono.begin() + start, mono.begin() + start + m_windowSize, fftReal.begin());
         fill(fftImag.begin(), fftImag.end(), 0);
 
-        // FFT 分析
+        
         applyHannWindow(fftReal);
         fft(fftReal, fftImag);
 
-        // 计算 4 个频段的能量
+  
         float bandEnergies[4];
         getBandEnergies(fftReal, fftImag, sampleRate, bandEnergies);
 
-        // 窗口中心时刻
-        float currentTime = (float)(start + m_windowSize / 2) / sampleRate;
+        
+        float currTime = (float)(start + m_windowSize / 2) / sampleRate;
 
-        // ---- 每个频段独立检测：Spectral Flux + 局部峰值 ----
+        // 谱通量 + 局部峰值检测
         for (int b = 0; b < 4; b++) 
         {
             BandState& st = bands[b];
             float energy = bandEnergies[b];
 
-            // 计算 spectral flux: 能量变化（只取正值，忽略衰减）
-            float flux = max(0.0f, energy - st.lastEnergy);
+            
+            float flux = energy - st.lastEnergy;
+            if (flux < 0) 
+            {
+                flux = 0;
+            }
             st.lastEnergy = energy;
 
-            // 更新 flux 滑动历史
+            
             st.fluxHistory.push_back(flux);
             st.fluxHistorySum += flux;
             while (st.fluxHistory.size() > m_historySize) 
@@ -282,14 +316,13 @@ Chart MapGenerator::generate(const string& audioFilePath)
                 st.fluxHistory.pop_front();
             }
 
-            // 历史不够 → 跳过
             if (st.fluxHistory.size() < m_historySize) 
             {
                 st.lastFlux = flux;
                 continue;
             }
 
-            // 基于 flux 的动态阈值
+
             float avgFlux = st.fluxHistorySum / st.fluxHistory.size();
             float dynamicFluxThreshold = avgFlux * m_threshold;
             if (dynamicFluxThreshold < ABSOLUTE_MIN_ENERGY) 
@@ -298,64 +331,49 @@ Chart MapGenerator::generate(const string& audioFilePath)
             }
 
             // Hold 持续判定：基于 onset 能量的衰减比例
-            float sustainThreshold = st.inHold ? max(ABSOLUTE_MIN_ENERGY, st.holdStartEnergy * 0.15f) : 0.0f;
+            float sustainThreshold = st.holdStartEnergy * 0.15;
+            if (sustainThreshold < ABSOLUTE_MIN_ENERGY) 
+            {
+                sustainThreshold = ABSOLUTE_MIN_ENERGY;
+            }
+            if (!st.inHold) 
+            {
+                sustainThreshold = 0;
+            }
 
-            // 局部峰值检测的 reset 逻辑：
+            
+
             // 触发一次后进入 waitingReset，直到 flux 降至阈值的 50% 以下
-            // 避免连续增长期间（如 crescendo）每个窗口都触发
-            if (st.waitingReset && flux < dynamicFluxThreshold * 0.5f) 
+            if (st.waitingReset && flux < dynamicFluxThreshold * 0.5) 
             {
                 st.waitingReset = false;
             }
 
-            // 节拍检测
-            // 条件 1: flux 超过动态阈值
-            // 条件 2: 不在 waitingReset 状态（上次触发后尚未回落到静默）
-            // 条件 3: flux 正在上升（即上一帧 flux <= 当前，用于捕捉上升沿）
-            // 条件 4: 满足轨道内最小间隔
+
+
+            // 节拍判定
             bool isRising = (flux >= st.lastFlux);
             st.lastFlux = flux;
 
-            if (flux > dynamicFluxThreshold && !st.waitingReset && isRising) 
+            if (flux > dynamicFluxThreshold
+                && !st.waitingReset
+                && isRising
+                && currTime - st.lastBeatTime >= m_minInterval)
             {
-                if (currentTime - st.lastBeatTime >= m_minInterval) 
+                // 如果之前已经有 Hold，先结束它
+                if (st.inHold)
                 {
-                    if (st.inHold) 
-                    {
-                        float holdDuration = currentTime - st.holdStartTime;
-                        if (holdDuration >= MIN_HOLD_DURATION) 
-                        {
-                            st.beatTimes.push_back(st.holdStartTime);
-                            st.beatDurations.push_back(holdDuration);
-                        } else 
-                        {
-                            st.beatTimes.push_back(st.holdStartTime);
-                            st.beatDurations.push_back(0.0);
-                        }
-                    }
-                    // 开始新的 hold
-                    st.inHold = true;
-                    st.holdStartTime = currentTime;
-                    st.holdStartEnergy = energy;
-                    st.lastBeatTime = currentTime;
-                    st.waitingReset = true;   // 触发后锁住，等 flux 回落
+                    finalizeHold(st, currTime);
                 }
+            
+                // 开始新的 Hold
+                startHold(st, currTime, energy);
             }
-
-            // ---- hold 结束判定（基于能量衰减到 onset 的 15% 以下） ----
-            if (st.inHold && energy < sustainThreshold) 
+            
+            // Hold 结束判定（能量衰减到起始能量的15%以下）
+            if (st.inHold && energy < sustainThreshold)
             {
-                float holdDuration = currentTime - st.holdStartTime;
-                if (holdDuration >= MIN_HOLD_DURATION) 
-                {
-                    st.beatTimes.push_back(st.holdStartTime);
-                    st.beatDurations.push_back(holdDuration);
-                } 
-                else 
-                {
-                    st.beatTimes.push_back(st.holdStartTime);
-                    st.beatDurations.push_back(0.0);
-                }
+                finalizeHold(st, currTime);
                 st.inHold = false;
             }
         }
@@ -369,7 +387,7 @@ Chart MapGenerator::generate(const string& audioFilePath)
                 int sz = bands[b].fluxHistory.size();
                 if (sz > 0) af[b] = bands[b].fluxHistorySum / sz;
             }
-            cout << "  [" << windowIndex << "] t=" << currentTime << "s"
+            cout << "  [" << windowIndex << "] t=" << currTime << "s"
                       << " avgFlux=[" << af[0] << "," << af[1] << "," << af[2] << "," << af[3] << "]"
                       << endl;
         }
@@ -486,7 +504,9 @@ Chart MapGenerator::generate(const string& audioFilePath)
             continue;
         }
 
-        float noteEnd = c.time + max(c.duration, 0.03f) + MIN_GAP;
+        float duration = c.duration;
+        if (duration < 0.03f) duration = 0.03f;
+        float noteEnd = c.time + duration + MIN_GAP;
         int preferredTrack = c.track;
 
         bool overlapOnPreferred = (c.time < trackFreeUntil[preferredTrack]);
@@ -595,5 +615,6 @@ Chart MapGenerator::generate(const string& audioFilePath)
 
     return chart;
 }
+
 
 
