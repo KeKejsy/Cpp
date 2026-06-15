@@ -3,7 +3,6 @@
 
 #include <SFML/Graphics.hpp>
 #include <cmath>
-#include <cstdint>
 using namespace std;
 
 enum class LoadingResult {
@@ -50,9 +49,9 @@ public:
         }
         float intensity = 0.5 + 0.5 * sin(m_titleFlashTimer / 1.2 * 3.14159 * 2.0);
         sf::Color titleColor(
-            static_cast<uint8_t>(180 * intensity),
-            static_cast<uint8_t>(220 * intensity),
-            static_cast<uint8_t>(255 * intensity)
+            static_cast<unsigned char>(180 * intensity),
+            static_cast<unsigned char>(220 * intensity),
+            static_cast<unsigned char>(255 * intensity)
         );
         m_titleText.setFillColor(titleColor);
     }

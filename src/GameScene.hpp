@@ -4,7 +4,6 @@
 #include <SFML/Graphics.hpp>
 #include <sstream>
 #include <cmath>
-#include <cstdint>
 #include <algorithm>
 #include "Framework.h"
 #include "AssetManager.hpp"
@@ -238,7 +237,7 @@ private:
 
                     float alpha = 1.0 - static_cast<float>(elapsed / 0.25);
                     sf::Color fadeColor(noteColor.r, noteColor.g, noteColor.b,
-                                        static_cast<uint8_t>(180 * alpha));
+                                        static_cast<unsigned char>(180 * alpha));
                     sf::RectangleShape noteShape(sf::Vector2f(noteWidth, 30.0));
                     noteShape.setPosition(sf::Vector2f(noteX, m_trackY));
                     noteShape.setFillColor(fadeColor);
@@ -272,7 +271,7 @@ private:
 
                     float alpha = 1.0 - static_cast<float>(elapsed / 0.3);
                     sf::Color fadeColor(noteColor.r, noteColor.g, noteColor.b,
-                                        static_cast<uint8_t>(150 * alpha));
+                                        static_cast<unsigned char>(150 * alpha));
                     sf::RectangleShape noteShape(sf::Vector2f(noteWidth, 30.0));
                     noteShape.setPosition(sf::Vector2f(noteX, m_trackY - 15.0));
                     noteShape.setFillColor(fadeColor);
@@ -298,8 +297,8 @@ private:
                     int noteIndex = static_cast<int>(&note - &notes[0]);
                     bool isBeingHeld = m_game.isNoteBeingHeld(noteIndex);
 
-                    uint8_t barAlpha = isBeingHeld ? 200 : 100;
-                    uint8_t headAlpha = isBeingHeld ? 255 : 180;
+                    unsigned char barAlpha = isBeingHeld ? 200 : 100;
+                    unsigned char headAlpha = isBeingHeld ? 255 : 180;
 
                     // hold ����ʹ�õ���ɫ
                     sf::RectangleShape holdBar(sf::Vector2f(noteWidth, holdHeight));
@@ -354,7 +353,7 @@ private:
         // 脉冲透明效果
         float fractional = m_countdownTimer - floor(m_countdownTimer);
         float alpha = 0.6 + 0.4 * sin(fractional * 3.14159);
-        countdownColor.a = static_cast<uint8_t>(255 * alpha);
+        countdownColor.a = static_cast<unsigned char>(255 * alpha);
         text.setFillColor(countdownColor);
 
         m_window.draw(text);

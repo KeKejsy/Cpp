@@ -4,7 +4,6 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 #include <cstdlib>
-#include <cstdint>
 #include "AssetManager.hpp"
 using namespace std;
 
@@ -82,9 +81,9 @@ public:
         
         float intensity = 0.6 + 0.4 * (m_titleFlashTimer / 0.8);
         sf::Color titleColor(
-            static_cast<uint8_t>(100 * intensity),
-            static_cast<uint8_t>(200 * intensity),
-            static_cast<uint8_t>(255 * intensity)
+            static_cast<unsigned char>(100 * intensity),
+            static_cast<unsigned char>(200 * intensity),
+            static_cast<unsigned char>(255 * intensity)
         );
         m_titleText.setFillColor(titleColor);
         
@@ -216,9 +215,9 @@ private:
             float radius = 2.0 + static_cast<float>(rand() % 3);
             p.shape.setRadius(radius);
             p.shape.setFillColor(sf::Color(
-                static_cast<uint8_t>(100 + rand() % 155),
-                static_cast<uint8_t>(100 + rand() % 155),
-                static_cast<uint8_t>(200 + rand() % 55),
+                static_cast<unsigned char>(100 + rand() % 155),
+                static_cast<unsigned char>(100 + rand() % 155),
+                static_cast<unsigned char>(200 + rand() % 55),
                 100
             ));
             

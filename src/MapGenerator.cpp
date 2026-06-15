@@ -8,64 +8,61 @@
 #include <algorithm>
 using namespace std;
 
-// 静态常量定义（在 .h 中声明，这里赋值）
+
 // 频段边界：20-150, 150-500, 500-2000, 2000-8000 Hz
 const float MapGenerator::BAND_EDGES[5] = {20, 150, 500, 2000, 8000};
 const float MapGenerator::SUSTAIN_RATIO = 0.25;
 const float MapGenerator::MIN_HOLD_DURATION = 0.25;
 const float MapGenerator::ABSOLUTE_MIN_ENERGY = 0.0005;
 
-// ---------------------------------------------------------------------------
-// 构造 / 难度
-// ---------------------------------------------------------------------------
-MapGenerator::MapGenerator()
-    :m_windowSize(1024),
-    m_historySize(45),
-    m_threshold(2.0),
-    m_minInterval(0.28),
-    m_globalMinInterval(0.12),
-    m_difficulty(Difficulty::Normal)
-{
-    srand(static_cast<unsigned int>(time(nullptr)));
-}
 
+#pragma region 构造&难度 
 MapGenerator::MapGenerator(Difficulty difficulty)
-    : MapGenerator()
+    : m_windowSize(1024),
+      m_historySize(45),
+      m_threshold(2.0),
+      m_minInterval(0.28),
+      m_globalMinInterval(0.12),
+      m_difficulty(Difficulty::Normal)
 {
     setDifficulty(difficulty);
 }
 
-void MapGenerator::setDifficulty(Difficulty difficulty) {
+void MapGenerator::setDifficulty(Difficulty difficulty) 
+{
     m_difficulty = difficulty;
-    applyDifficulty();
-}
-
-void MapGenerator::applyDifficulty() {
-    switch (m_difficulty) {
+    switch (m_difficulty) 
+    {
         case Difficulty::Easy:
+        {
             m_threshold = 2.8;
             m_minInterval = 0.45;
             m_historySize = 60;
             m_globalMinInterval = 0.20;
             break;
+        }
         case Difficulty::Normal:
+        {
             m_threshold = 2.0;
             m_minInterval = 0.28;
             m_historySize = 45;
             m_globalMinInterval = 0.12;
             break;
+        }
         case Difficulty::Hard:
+        {
             m_threshold = 1.5;
             m_minInterval = 0.18;
             m_historySize = 30;
             m_globalMinInterval = 0.08;
             break;
+        }
     }
 }
+#pragma endregion
 
-// ---------------------------------------------------------------------------
-// FFT: radix-2 Cooley-Tukey, 迭代实现
-// ---------------------------------------------------------------------------
+
+#pragma region FFT
 void MapGenerator::fft(vector<float>& real, vector<float>& imag) {
     int n = static_cast<int>(real.size());
     if (n <= 1) return;
@@ -106,29 +103,36 @@ void MapGenerator::fft(vector<float>& real, vector<float>& imag) {
         }
     }
 }
+#pragma endregion
 
-// ---------------------------------------------------------------------------
-// Hann 窗
-// ---------------------------------------------------------------------------
-void MapGenerator::applyHannWindow(vector<float>& samples) {
+
+#pragma region Hann窗
+void MapGenerator::applyHannWindow(vector<float>& samples) 
+{
     int n = static_cast<int>(samples.size());
-    for (int i = 0; i < n; i++) {
-        float multiplier = 0.5 * (1.0 - cos(2.0 * 3.14159265358979 * i / (n - 1)));
+    for (int i = 0; i < n; i++) 
+    {
+        float multiplier = 0.5 * (1.0 - cos(2 * 3.14159265358979 * i / (n - 1)));
         samples[i] *= multiplier;
     }
 }
+#pragma endregion
 
-// ---------------------------------------------------------------------------
-// 频段能量计算
-// ---------------------------------------------------------------------------
-void MapGenerator::computeBandEnergies(const vector<float>& real,
-                                        const vector<float>& imag,
-                                        float sampleRate,
-                                        float bandEnergies[4]) {
+
+#pragma region 频段能量计算
+void MapGenerator::getBandEnergies
+(
+    const vector<float>& real,
+    const vector<float>& imag,
+    float sampleRate,
+    float bandEnergies[4]
+) 
+{
     int n = static_cast<int>(real.size());
     float binWidth = sampleRate / n;
 
-    for (int b = 0; b < 4; b++) {
+    for (int b = 0; b < 4; b++)
+     {
         bandEnergies[b] = 0.0;
         float lowFreq = BAND_EDGES[b];
         float highFreq = BAND_EDGES[b + 1];
@@ -136,60 +140,71 @@ void MapGenerator::computeBandEnergies(const vector<float>& real,
         int startBin = max(1, static_cast<int>(lowFreq / binWidth));
         int endBin = min(static_cast<int>(highFreq / binWidth), n / 2);
 
-        for (int i = startBin; i <= endBin; i++) {
+        for (int i = startBin; i <= endBin; i++) 
+        {
             float mag2 = real[i] * real[i] + imag[i] * imag[i];
             bandEnergies[b] += mag2;
         }
 
-        // 归一化：除以频段覆盖的 bin 数，使得不同宽度的频段可比较
         int binCount = endBin - startBin + 1;
-        if (binCount > 0) {
+        if (binCount > 0) 
+        {
             bandEnergies[b] /= binCount;
         }
     }
 }
+#pragma endregion
 
-// ---------------------------------------------------------------------------
-// 立体声 → 单声道
-// ---------------------------------------------------------------------------
-int MapGenerator::convertToMono(const int16_t* buffer, int numSamples,
-                                 int channelCount, vector<float>& monoOut) {
-    int frameCount = numSamples / channelCount;
-    monoOut.resize(frameCount);
 
-    for (int i = 0; i < frameCount; i++) {
-        float sum = 0.0;
-        for (int ch = 0; ch < channelCount; ch++) {
-            sum += static_cast<float>(buffer[i * channelCount + ch]) / 32768.0;
+#pragma region 立体声转换
+int MapGenerator::translate
+(
+    const short* buffer, 
+    int sampleCount,
+    int channelCount, 
+    vector<float>& result
+) 
+{
+    int finalCount = sampleCount / channelCount;
+    result.resize(finalCount);
+
+    for (int i = 0; i < finalCount; i++)
+    {
+        float sum = 0;
+        for (int j = 0; j < channelCount; j++) 
+        {
+            sum += buffer[i * channelCount + j] / 32768.0;
         }
-        monoOut[i] = sum / channelCount;
+        result[i] = sum / channelCount;
     }
 
-    return frameCount;
+    return finalCount;
 }
+#pragma endregion
 
-// ---------------------------------------------------------------------------
-// 核心：谱面生成（Spectral Flux 检测 + 50% overlap + 全局限流 + 局部峰值）
-// ---------------------------------------------------------------------------
+
+#pragma region 谱面生成
 Chart MapGenerator::generate(const string& audioFilePath) {
     Chart chart;
     chart.songName = audioFilePath;
     chart.noteDensity = 0.0;
     chart.duration = 0.0;
 
-    // 打开音频文件
+    //打开文件
     sf::InputSoundFile file;
-    if (!file.openFromFile(audioFilePath)) {
-        cerr << "[MapGenerator] 无法打开音频文件: " << audioFilePath << endl;
+    if (!file.openFromFile(audioFilePath)) 
+    {
+        cout << "[MapGenerator] 无法打开音频文件: " << audioFilePath << endl;
         return chart;
     }
 
-    int64_t totalFrames = file.getSampleCount();
+    long long totalFrames = file.getSampleCount();
     unsigned int sampleRate = file.getSampleRate();
     unsigned int channelCount = file.getChannelCount();
 
-    if (totalFrames <= 0 || sampleRate <= 0) {
-        cerr << "[MapGenerator] 音频数据无效" << endl;
+    if (totalFrames <= 0 || sampleRate <= 0)
+    {
+        cout << "[MapGenerator] 音频数据无效" << endl;
         return chart;
     }
 
@@ -207,14 +222,14 @@ Chart MapGenerator::generate(const string& audioFilePath) {
               << ", globalMinInterval=" << m_globalMinInterval << "s)"
               << endl;
 
-    // ---- 读取全部音频到内存 ----
-    int64_t totalSamples = totalFrames * channelCount;
-    vector<int16_t> allSamples(static_cast<size_t>(totalSamples));
-    int64_t actuallyRead = file.read(allSamples.data(), totalSamples);
+    //读取音频
+    long long totalSamples = totalFrames * channelCount;
+    vector<short> allSamples(static_cast<size_t>(totalSamples));
+    long long actuallyRead = file.read(allSamples.data(), totalSamples);
 
-    // 转换为单声道
+    //转换为单声道
     vector<float> mono;
-    int frameCount = convertToMono(allSamples.data(), static_cast<int>(actuallyRead),
+    int frameCount = translate(allSamples.data(), static_cast<int>(actuallyRead),
                                     channelCount, mono);
 
     cout << "[MapGenerator] 读取完成，共 " << frameCount << " 帧" << endl;
@@ -242,7 +257,7 @@ Chart MapGenerator::generate(const string& audioFilePath) {
 
         // 计算 4 个频段的能量
         float bandEnergies[4];
-        computeBandEnergies(fftReal, fftImag, static_cast<float>(sampleRate), bandEnergies);
+        getBandEnergies(fftReal, fftImag, sampleRate, bandEnergies);
 
         // 窗口中心时刻
         float currentTime = static_cast<float>(start + m_windowSize / 2) / sampleRate;
@@ -289,7 +304,7 @@ Chart MapGenerator::generate(const string& audioFilePath) {
                 st.waitingReset = false;
             }
 
-            // ---- 节拍检测 ----
+            // 节拍检测
             // 条件 1: flux 超过动态阈值
             // 条件 2: 不在 waitingReset 状态（上次触发后尚未回落到静默）
             // 条件 3: flux 正在上升（即上一帧 flux <= 当前，用于捕捉上升沿）
@@ -418,7 +433,9 @@ Chart MapGenerator::generate(const string& audioFilePath) {
         // gap == 0: 同时刻双押/多押 → 保留，不更新时间基准
     }
 
-    // ---- 轨道分配（允许双押/多押，只处理同轨道冲突） ----
+
+
+#pragma region 轨道分配
     const float MIN_GAP = 0.06;
     const int MAX_CONSECUTIVE = 3;
 
@@ -467,7 +484,7 @@ Chart MapGenerator::generate(const string& audioFilePath) {
         }
     }
 
-    // 轨道分配统计
+    // 统计
     int trackNoteCount[4] = {0, 0, 0, 0};
     for (size_t i = 0; i < candidates.size(); i++) {
         if (candidates[i].time >= 0) trackNoteCount[candidates[i].track]++;
@@ -477,7 +494,11 @@ Chart MapGenerator::generate(const string& audioFilePath) {
               << " T2=" << trackNoteCount[2]
               << " T3=" << trackNoteCount[3] << endl;
 
-    // ---- 生成最终 Note 列表 ----
+#pragma endregion
+
+
+
+#pragma region 生成Note列表
     for (size_t i = 0; i < candidates.size(); i++) {
         if (candidates[i].time < 0) continue;
 
@@ -490,16 +511,24 @@ Chart MapGenerator::generate(const string& audioFilePath) {
         note.hitTime = 0.0;
         chart.notes.push_back(note);
     }
+#pragma endregion
 
-    // Note Density (NPM: Notes Per Minute)
+
+
+#pragma region 音符密度计算
     if (!chart.notes.empty()) {
-        chart.noteDensity = static_cast<double>(chart.notes.size()) / chart.duration * 60.0;
+        chart.noteDensity = chart.notes.size() / chart.duration * 60.0;
         cout << "[MapGenerator] 最终谱面: " << chart.notes.size()
                   << " 个音符, Note Density: " << fixed << setprecision(1)
                   << chart.noteDensity << " NPM" << endl;
     } else {
         cout << "[MapGenerator] 未检测到节拍，请尝试调低难度" << endl;
     }
+#pragma endregion
+
+#pragma endregion
 
     return chart;
 }
+
+

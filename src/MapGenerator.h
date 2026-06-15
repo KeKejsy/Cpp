@@ -1,7 +1,6 @@
 #pragma once
 
 #include "common.h"
-#include <cstdint>
 #include <string>
 #include <vector>
 #include <deque>
@@ -14,7 +13,6 @@ using namespace std;
 // Spectral Flux 突出鼓点、镲片、钢琴击键等瞬态，压制持续人声
 class MapGenerator {
 public:
-    MapGenerator();
     MapGenerator(Difficulty difficulty);
 
     // 核心接口：传入音频文件路径，返回生成的 Chart
@@ -47,17 +45,14 @@ private:
 
     // 从 FFT 结果计算 4 个频段的能量
     // bandEdges[5] = {low, midLow, midHigh, high, nyquist} 频段边界频率 (Hz)
-    void computeBandEnergies(const vector<float>& real,
+    void getBandEnergies(const vector<float>& real,
                               const vector<float>& imag,
                               float sampleRate,
                               float bandEnergies[4]);
 
     // 将立体声 int16 采样转换为单声道 float，返回有效采样数
-    int convertToMono(const int16_t* buffer, int numSamples, int channelCount,
-                      vector<float>& monoOut);
-
-    // 根据难度设置参数
-    void applyDifficulty();
+    int translate(const short* buffer, int sampleCount, int channelCount,
+                      vector<float>& result);
 
     // ---- 可调参数 ----
     int m_windowSize;           // 窗口大小（采样点数），默认 1024
