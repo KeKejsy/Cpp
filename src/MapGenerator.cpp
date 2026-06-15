@@ -224,7 +224,7 @@ Chart MapGenerator::generate(const string& audioFilePath) {
 
     //读取音频
     long long totalSamples = totalFrames * channelCount;
-    vector<short> allSamples(static_cast<size_t>(totalSamples));
+    vector<short> allSamples(totalSamples);
     long long actuallyRead = file.read(allSamples.data(), totalSamples);
 
     //转换为单声道

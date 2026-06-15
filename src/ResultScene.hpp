@@ -81,8 +81,7 @@ public:
         }
         
         if (const auto* mouseEvent = event.getIf<sf::Event::MouseMoved>()) {
-            sf::Vector2f mousePos(static_cast<float>(mouseEvent->position.x), 
-                                  static_cast<float>(mouseEvent->position.y));
+            sf::Vector2f mousePos(mouseEvent->position.x, mouseEvent->position.y);
             for (size_t i = 0; i < m_buttons.size(); i++) {
                 if (m_buttons[i].background.getGlobalBounds().contains(mousePos)) {
                     if (static_cast<int>(i) != m_selectedIndex) {
@@ -96,8 +95,7 @@ public:
         
         if (const auto* mouseEvent = event.getIf<sf::Event::MouseButtonPressed>()) {
             if (mouseEvent->button == sf::Mouse::Button::Left) {
-                sf::Vector2f mousePos(static_cast<float>(mouseEvent->position.x),
-                                      static_cast<float>(mouseEvent->position.y));
+                sf::Vector2f mousePos(mouseEvent->position.x, mouseEvent->position.y);
                 for (const auto& btn : m_buttons) {
                     if (btn.background.getGlobalBounds().contains(mousePos)) {
                         return btn.action;
@@ -152,9 +150,9 @@ private:
 
     void setupUI() {
         sf::Vector2u windowSize = m_window.getSize();
-        float centerX = static_cast<float>(windowSize.x) / 2.0;
-        
-        m_background.setSize(sf::Vector2f(static_cast<float>(windowSize.x), static_cast<float>(windowSize.y)));
+        float centerX = windowSize.x / 2.0;
+
+        m_background.setSize(sf::Vector2f(windowSize.x, windowSize.y));
         m_background.setFillColor(sf::Color(30, 30, 50));
         
         m_titleText.setFillColor(sf::Color::Cyan);

@@ -128,8 +128,7 @@ public:
         }
 
         if (const auto* mouseEvent = event.getIf<sf::Event::MouseMoved>()) {
-            sf::Vector2f mousePos(static_cast<float>(mouseEvent->position.x),
-                                  static_cast<float>(mouseEvent->position.y));
+            sf::Vector2f mousePos(mouseEvent->position.x, mouseEvent->position.y);
             // 检查按�?
             for (size_t i = 0; i < m_buttons.size(); i++) {
                 if (m_buttons[i].background.getGlobalBounds().contains(mousePos)) {
@@ -153,8 +152,7 @@ public:
 
         if (const auto* mouseEvent = event.getIf<sf::Event::MouseButtonPressed>()) {
             if (mouseEvent->button == sf::Mouse::Button::Left) {
-                sf::Vector2f mousePos(static_cast<float>(mouseEvent->position.x),
-                                      static_cast<float>(mouseEvent->position.y));
+                sf::Vector2f mousePos(mouseEvent->position.x, mouseEvent->position.y);
                 // 按钮点击
                 for (const auto& btn : m_buttons) {
                     if (btn.background.getGlobalBounds().contains(mousePos)) {
@@ -212,10 +210,10 @@ private:
 
     void setupUI() {
         sf::Vector2u windowSize = m_window.getSize();
-        float centerX = static_cast<float>(windowSize.x) / 2.0;
+        float centerX = windowSize.x / 2.0;
 
         // ����
-        m_background.setSize(sf::Vector2f(static_cast<float>(windowSize.x), static_cast<float>(windowSize.y)));
+        m_background.setSize(sf::Vector2f(windowSize.x, windowSize.y));
         m_background.setFillColor(sf::Color(25, 25, 45));
 
         // ����
@@ -304,7 +302,7 @@ private:
 
         // 居中文本
         sf::FloatRect bounds = m_difficultyValue.getLocalBounds();
-        float centerX = static_cast<float>(m_window.getSize().x) / 2.0;
+        float centerX = m_window.getSize().x / 2.0;
         m_difficultyValue.setPosition(sf::Vector2f(centerX + 55.0, 428.0));
     }
 

@@ -45,8 +45,7 @@ public:
         }
         
         if (const auto* mouseEvent = event.getIf<sf::Event::MouseMoved>()) {
-            sf::Vector2f mousePos(static_cast<float>(mouseEvent->position.x), 
-                                  static_cast<float>(mouseEvent->position.y));
+            sf::Vector2f mousePos(mouseEvent->position.x, mouseEvent->position.y);
             for (size_t i = 0; i < m_items.size(); i++) {
                 if (m_items[i].background.getGlobalBounds().contains(mousePos)) {
                     if (static_cast<int>(i) != m_selectedIndex) {
@@ -60,8 +59,7 @@ public:
         
         if (const auto* mouseEvent = event.getIf<sf::Event::MouseButtonPressed>()) {
             if (mouseEvent->button == sf::Mouse::Button::Left) {
-                sf::Vector2f mousePos(static_cast<float>(mouseEvent->position.x),
-                                      static_cast<float>(mouseEvent->position.y));
+                sf::Vector2f mousePos(mouseEvent->position.x, mouseEvent->position.y);
                 for (const auto& item : m_items) {
                     if (item.background.getGlobalBounds().contains(mousePos)) {
                         return item.action;
@@ -129,18 +127,18 @@ private:
 
     void setupUI() {
         sf::Vector2u windowSize = m_window.getSize();
-        float centerX = static_cast<float>(windowSize.x) / 2.0;
-        
-        m_background.setSize(sf::Vector2f(static_cast<float>(windowSize.x), static_cast<float>(windowSize.y)));
+        float centerX = windowSize.x / 2.0;
+
+        m_background.setSize(sf::Vector2f(windowSize.x, windowSize.y));
         m_background.setFillColor(sf::Color(20, 20, 40));
-        
-        m_topBar.setSize(sf::Vector2f(static_cast<float>(windowSize.x), 5.0));
+
+        m_topBar.setSize(sf::Vector2f(windowSize.x, 5.0));
         m_topBar.setFillColor(sf::Color(100, 100, 200));
         m_topBar.setPosition(sf::Vector2f(0.0, 0.0));
-        
-        m_bottomBar.setSize(sf::Vector2f(static_cast<float>(windowSize.x), 5.0));
+
+        m_bottomBar.setSize(sf::Vector2f(windowSize.x, 5.0));
         m_bottomBar.setFillColor(sf::Color(100, 100, 200));
-        m_bottomBar.setPosition(sf::Vector2f(0.0, static_cast<float>(windowSize.y) - 5.0));
+        m_bottomBar.setPosition(sf::Vector2f(0.0, windowSize.y - 5.0));
         
         m_titleText.setOutlineColor(sf::Color::White);
         m_titleText.setOutlineThickness(2.0);
@@ -212,7 +210,7 @@ private:
         
         for (int i = 0; i < 100; i++) {
             Particle p;
-            float radius = 2.0 + static_cast<float>(rand() % 3);
+            float radius = 2.0 + rand() % 3;
             p.shape.setRadius(radius);
             p.shape.setFillColor(sf::Color(
                 static_cast<unsigned char>(100 + rand() % 155),
@@ -221,10 +219,10 @@ private:
                 100
             ));
             
-            p.x = static_cast<float>(rand() % windowSize.x);
-            p.y = static_cast<float>(rand() % windowSize.y);
+            p.x = rand() % windowSize.x;
+            p.y = rand() % windowSize.y;
             p.shape.setPosition(sf::Vector2f(p.x, p.y));
-            p.speed = 20.0 + static_cast<float>(rand() % 50);
+            p.speed = 20.0 + rand() % 50;
             
             m_particles.push_back(p);
         }
@@ -238,7 +236,7 @@ private:
             
             if (p.y > windowSize.y) {
                 p.y = 0;
-                p.x = static_cast<float>(rand() % windowSize.x);
+                p.x = rand() % windowSize.x;
             }
             
             p.shape.setPosition(sf::Vector2f(p.x, p.y));

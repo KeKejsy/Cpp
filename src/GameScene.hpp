@@ -235,7 +235,7 @@ private:
                     double elapsed = currentTime - note.hitTime;
                     if (elapsed > 0.25) continue;
 
-                    float alpha = 1.0 - static_cast<float>(elapsed / 0.25);
+                    float alpha = 1.0 - elapsed / 0.25;
                     sf::Color fadeColor(noteColor.r, noteColor.g, noteColor.b,
                                         static_cast<unsigned char>(180 * alpha));
                     sf::RectangleShape noteShape(sf::Vector2f(noteWidth, 30.0));
@@ -249,7 +249,7 @@ private:
                 double timeDiff = note.time - currentTime;
                 if (timeDiff < -0.6 || timeDiff > m_visibleAhead) continue;
 
-                float noteY = m_trackY - static_cast<float>(timeDiff * m_noteSpeed);
+                float noteY = m_trackY - timeDiff * m_noteSpeed;
                 if (noteY < m_trackTop || noteY > m_trackY + 60.0) continue;
 
                 sf::RectangleShape noteShape(sf::Vector2f(noteWidth, 10.0));
@@ -281,8 +281,8 @@ private:
 
                 if (timeDiff > m_visibleAhead || endTimeDiff < -0.5) continue;
 
-                float noteHeadY = m_trackY - static_cast<float>(timeDiff * m_noteSpeed);
-                float noteTailY = m_trackY - static_cast<float>(endTimeDiff * m_noteSpeed);
+                float noteHeadY = m_trackY - timeDiff * m_noteSpeed;
+                float noteTailY = m_trackY - endTimeDiff * m_noteSpeed;
 
                 float drawTop = noteTailY;
                 float drawBottom = noteHeadY;
@@ -320,7 +320,7 @@ private:
 
     void drawCountdown() {
         sf::Vector2u windowSize = m_window.getSize();
-        float centerX = static_cast<float>(windowSize.x) / 2.0;
+        float centerX = windowSize.x / 2.0;
         float centerY = m_trackY - 150.0;
 
         string countdownText;

@@ -70,11 +70,11 @@ public:
 private:
     void setupUI() {
         sf::Vector2u windowSize = m_window.getSize();
-        float centerX = static_cast<float>(windowSize.x) / 2.0;
-        float centerY = static_cast<float>(windowSize.y) / 2.0;
+        float centerX = windowSize.x / 2.0;
+        float centerY = windowSize.y / 2.0;
 
         // 背景
-        m_background.setSize(sf::Vector2f(static_cast<float>(windowSize.x), static_cast<float>(windowSize.y)));
+        m_background.setSize(sf::Vector2f(windowSize.x, windowSize.y));
         m_background.setFillColor(sf::Color(20, 20, 40));
 
         // 旋转进度条
