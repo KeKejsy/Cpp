@@ -23,16 +23,6 @@ target_link_libraries(rhythm_master
     comdlg32
 )
 
-# MapGenerator 测试程序（文件已删除，暂时注释）
-# add_executable(test_beat
-#     src/test_beat.cpp
-#     src/MapGenerator.cpp
-# )
-# target_link_libraries(test_beat
-#     SFML::Audio
-#     SFML::System
-# )
-
 # 构建后自动复制 DLL
 if(MINGW_BIN_DIR)
     add_custom_command(TARGET rhythm_master POST_BUILD
@@ -47,30 +37,3 @@ if(MINGW_BIN_DIR)
             $<TARGET_FILE_DIR:rhythm_master>
     )
 endif()
-
-# 成员 B 测试 (文件已删除，暂时注释)
-# add_executable(test_member_b
-#     src/test_member_b.cpp
-#     src/Framework.cpp
-# )
-#
-# target_link_libraries(test_member_b
-#     SFML::Graphics
-#     SFML::Audio
-#     SFML::Window
-#     SFML::System
-# )
-#
-# if(MINGW_BIN_DIR)
-#     add_custom_command(TARGET test_member_b POST_BUILD
-#         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#             "${MINGW_BIN_DIR}/libsfml-audio-3.dll"
-#             "${MINGW_BIN_DIR}/libsfml-graphics-3.dll"
-#             "${MINGW_BIN_DIR}/libsfml-window-3.dll"
-#             "${MINGW_BIN_DIR}/libsfml-system-3.dll"
-#             "${MINGW_BIN_DIR}/libgcc_s_seh-1.dll"
-#             "${MINGW_BIN_DIR}/libstdc++-6.dll"
-#             "${MINGW_BIN_DIR}/libwinpthread-1.dll"
-#             $<TARGET_FILE_DIR:test_member_b>
-#     )
-# endif()
