@@ -440,7 +440,8 @@ Chart MapGenerator::generate(const string& audioFilePath)
 
     // 按时间排序
     sort(candidates.begin(), candidates.end(),
-              [](const NoteCandidate& a, const NoteCandidate& b) {
+              [](const NoteCandidate& a, const NoteCandidate& b) 
+              {
                   return a.time < b.time;
               });
 
@@ -496,19 +497,25 @@ Chart MapGenerator::generate(const string& audioFilePath)
             int bestTrack = -1;
             int bestScore = 999;
 
-            for (int t = 0; t < 4; t++) {
-                if (c.time >= trackFreeUntil[t]) {
+            for (int t = 0; t < 4; t++) 
+            {
+                if (c.time >= trackFreeUntil[t]) 
+                {
                     int score = trackConsecutive[t] * 2 + abs(t - preferredTrack);
-                    if (score < bestScore) {
+                    if (score < bestScore) 
+                    {
                         bestScore = score;
                         bestTrack = t;
                     }
                 }
             }
 
-            if (bestTrack >= 0) {
+            if (bestTrack >= 0) 
+            {
                 c.track = bestTrack;
-            } else if (overlapOnPreferred) {
+            } 
+            else if (overlapOnPreferred) 
+            {
                 c.time = -1.0;
                 continue;
             }
@@ -518,16 +525,27 @@ Chart MapGenerator::generate(const string& audioFilePath)
 
         trackFreeUntil[chosenTrack] = noteEnd;
 
-        for (int t = 0; t < 4; t++) {
-            if (t == chosenTrack) trackConsecutive[t]++;
-            else trackConsecutive[t] = 0;
+        for (int t = 0; t < 4; t++) 
+        {
+            if (t == chosenTrack) 
+            {
+                trackConsecutive[t]++;
+            }
+            else 
+            {
+                trackConsecutive[t] = 0;
+            }
         }
     }
 
     // 统计
     int trackNoteCount[4] = {0, 0, 0, 0};
-    for (size_t i = 0; i < candidates.size(); i++) {
-        if (candidates[i].time >= 0) trackNoteCount[candidates[i].track]++;
+    for (size_t i = 0; i < candidates.size(); i++) 
+    {
+        if (candidates[i].time >= 0) 
+        {
+            trackNoteCount[candidates[i].track]++;
+        }
     }
     cout << "[MapGenerator] final: T0=" << trackNoteCount[0]
               << " T1=" << trackNoteCount[1]
@@ -539,8 +557,12 @@ Chart MapGenerator::generate(const string& audioFilePath)
 
 
 #pragma region 生成Note列表
-    for (size_t i = 0; i < candidates.size(); i++) {
-        if (candidates[i].time < 0) continue;
+    for (size_t i = 0; i < candidates.size(); i++) 
+    {
+        if (candidates[i].time < 0) 
+        {
+            continue;
+        }
 
         Note note;
         note.time = candidates[i].time;
@@ -556,12 +578,15 @@ Chart MapGenerator::generate(const string& audioFilePath)
 
 
 #pragma region 音符密度计算
-    if (!chart.notes.empty()) {
+    if (!chart.notes.empty()) 
+    {
         chart.noteDensity = chart.notes.size() / chart.duration * 60.0;
         cout << "[MapGenerator] 最终谱面: " << chart.notes.size()
                   << " 个音符, Note Density: " << fixed << setprecision(1)
                   << chart.noteDensity << " NPM" << endl;
-    } else {
+    }
+    else 
+    {
         cout << "[MapGenerator] 未检测到节拍，请尝试调低难度" << endl;
     }
 #pragma endregion
