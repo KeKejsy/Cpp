@@ -134,7 +134,7 @@ void MapGenerator::getBandEnergies
 ) 
 {
     int n = real.size();
-    float binWidth = sampleRate / n;
+    float binWidth = (float)sampleRate / n;
 
     for (int b = 0; b < 4; b++)
      {
@@ -184,9 +184,9 @@ int MapGenerator::translate
     for (int i = 0; i < finalCount; i++)
     {
         float sum = 0;
-        for (int j = 0; j < channelCount; j++) 
+        for (int j = 0; j < channelCount; j++)
         {
-            sum += buffer[i * channelCount + j] / 32768;
+            sum += buffer[i * channelCount + j] / 32768.0f;
         }
         result[i] = sum / channelCount;
     }
