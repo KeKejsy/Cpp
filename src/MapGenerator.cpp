@@ -390,20 +390,20 @@ Chart MapGenerator::generate(const string& audioFilePath)
             }
         }
 
-        // 进度（约每 2 秒打印一次）
-        if (windowIndex % 200 == 0) 
+        // 调试，观察是否正常
+    /*    if (windowIndex % 200 == 0) 
         {
-            float af[4] = {0, 0, 0, 0};
+            float avgflux[4] = {0, 0, 0, 0};
             for (int b = 0; b < 4; b++) 
             {
                 int sz = bands[b].fluxHistory.size();
-                if (sz > 0) af[b] = bands[b].fluxHistorySum / sz;
+                if (sz > 0) avgflux[b] = bands[b].fluxHistorySum / sz;
             }
             cout << "  [" << windowIndex << "] t=" << currTime << "s"
-                      << " avgFlux=[" << af[0] << "," << af[1] << "," << af[2] << "," << af[3] << "]"
+                      << " avgFlux=[" << avgflux[0] << "," << avgflux[1] << "," << avgflux[2] << "," << avgflux[3] << "]"
                       << endl;
         }
-
+    */  
         windowIndex++;
     }
 
@@ -429,7 +429,6 @@ Chart MapGenerator::generate(const string& audioFilePath)
     }
 
     #pragma region 统计数据
-    // 统计
     int totalBeats = 0;
     int totalHolds = 0;
     for (int b = 0; b < 4; b++) 
@@ -445,11 +444,11 @@ Chart MapGenerator::generate(const string& audioFilePath)
     }
 
     cout << "谱面生成完毕" << endl;
-    cout << "  Band 0 (20-150Hz,   Bass):     " << bands[0].beatTimes.size() << " notes" << endl;
-    cout << "  Band 1 (150-500Hz,  Low-Mid):  " << bands[1].beatTimes.size() << " notes" << endl;
-    cout << "  Band 2 (500-2000Hz, High-Mid): " << bands[2].beatTimes.size() << " notes" << endl;
-    cout << "  Band 3 (2000-8000Hz,High):     " << bands[3].beatTimes.size() << " notes" << endl;
-    cout << "  Total: " << totalBeats << " notes (" << totalHolds << " holds)" << endl;
+    cout << "  Band 0 (20-150Hz, 低音):     " << bands[0].beatTimes.size() << " 个音符" << endl;
+    cout << "  Band 1 (150-500Hz, 中低音):  " << bands[1].beatTimes.size() << " 个音符" << endl;
+    cout << "  Band 2 (500-2000Hz, 中高音): " << bands[2].beatTimes.size() << " 个音符" << endl;
+    cout << "  Band 3 (2000-8000Hz, 高音):     " << bands[3].beatTimes.size() << " 个音符" << endl;
+    cout << "  Total: " << totalBeats << " 个音符 (" << totalHolds << " 个持续音符)" << endl;
     #pragma endregion
 
 
