@@ -241,17 +241,17 @@ Chart MapGenerator::generate(const string& audioFilePath)
         return chart;
     }
 
-    long long totalFrames = file.getSampleCount();
+    long long totalSample = file.getSampleCount();
     unsigned int sampleRate = file.getSampleRate();
     unsigned int channelCount = file.getChannelCount();
 
-    if (totalFrames <= 0 || sampleRate <= 0)
+    if (totalSample <= 0 || sampleRate <= 0)
     {
         cout << "音频数据无效" << endl;
         return chart;
     }
 
-    chart.duration = (double)totalFrames / sampleRate;
+    chart.duration = (double)totalSample / sampleRate;
 
     cout << "音频加载成功" << endl;
     cout << "  采样率: " << sampleRate << " Hz" << endl;
@@ -265,10 +265,10 @@ Chart MapGenerator::generate(const string& audioFilePath)
               << ", 全局最小间隔=" << m_globalMinInterval << "s)"
               << endl;
 
-    //读取音频
 
-    vector<short> allSamples(totalFrames * channelCount);
-    long long actuallyRead = file.read(allSamples.data(), totalFrames * channelCount);
+    //读取音频
+    vector<short> allSamples(totalSample * channelCount);
+    long long actuallyRead = file.read(allSamples.data(), totalSample * channelCount);
 
     //转换为单声道
     vector<float> mono;
@@ -342,7 +342,7 @@ Chart MapGenerator::generate(const string& audioFilePath)
                 dynamicFluxThreshold = ABSOLUTE_MIN_ENERGY;
             }
 
-            // Hold 持续判定：基于 onset 能量的衰减比例
+            // Hold判定，衰减到一定比例后结束
             float sustainThreshold = st.holdStartEnergy * 0.15;
             if (sustainThreshold < ABSOLUTE_MIN_ENERGY) 
             {
@@ -355,7 +355,7 @@ Chart MapGenerator::generate(const string& audioFilePath)
 
             
 
-            // 触发一次后进入 waitingReset，直到 flux 降至阈值的 50% 以下
+            // 触发一次后进入waitingReset，直到flux降至阈值的 50% 以下
             if (st.waitingReset && flux < dynamicFluxThreshold * 0.5) 
             {
                 st.waitingReset = false;
@@ -382,7 +382,7 @@ Chart MapGenerator::generate(const string& audioFilePath)
                 startHold(st, currTime, energy);
             }
             
-            // Hold 结束判定（能量衰减到起始能量的15%以下）
+            // Hold结束判定（能量衰减到起始能量的15%以下）
             if (st.inHold && energy < sustainThreshold)
             {
                 finalizeHold(st, currTime);
@@ -428,7 +428,8 @@ Chart MapGenerator::generate(const string& audioFilePath)
         }
     }
 
-    // ---- 统计 ----
+    #pragma region 统计数据
+    // 统计
     int totalBeats = 0;
     int totalHolds = 0;
     for (int b = 0; b < 4; b++) 
@@ -436,21 +437,23 @@ Chart MapGenerator::generate(const string& audioFilePath)
         totalBeats += bands[b].beatTimes.size();
         for (size_t j = 0; j < bands[b].beatDurations.size(); j++) 
         {
-            if (bands[b].beatDurations[j] > 0.0) 
+            if (bands[b].beatDurations[j] > 0) 
             {
                 totalHolds++;
             }
         }
     }
 
-    cout << "[MapGenerator] 分析完成" << endl;
+    cout << "谱面生成完毕" << endl;
     cout << "  Band 0 (20-150Hz,   Bass):     " << bands[0].beatTimes.size() << " notes" << endl;
     cout << "  Band 1 (150-500Hz,  Low-Mid):  " << bands[1].beatTimes.size() << " notes" << endl;
     cout << "  Band 2 (500-2000Hz, High-Mid): " << bands[2].beatTimes.size() << " notes" << endl;
     cout << "  Band 3 (2000-8000Hz,High):     " << bands[3].beatTimes.size() << " notes" << endl;
     cout << "  Total: " << totalBeats << " notes (" << totalHolds << " holds)" << endl;
+    #pragma endregion
 
-    // ---- 生成 Note 列表 ----
+
+    #pragma region 生成候选音符列表
     struct NoteCandidate 
     {
         float time;
@@ -478,28 +481,21 @@ Chart MapGenerator::generate(const string& audioFilePath)
 
 
     // 跨轨道限制最小间隔，防止四个轨道交替形成连续连打
-    // 同时刻音符（差值≈0）视为双押/多押，放行且不更新时间基准
+    // 同时刻音符视为双押/多押，放行且不更新时间基准
     float lastGlobalNoteTime = -1;
     for (size_t i = 0; i < candidates.size(); i++) 
     {
-        if (candidates[i].time < 0) 
-        {
-            continue;
-        }
         float gap = candidates[i].time - lastGlobalNoteTime;
-        if (lastGlobalNoteTime >= 0 && gap > 0 && gap < m_globalMinInterval) 
+        if (gap > 0 && gap < m_globalMinInterval) 
         {
-            // 严格晚于上一音符但间隔不足 → 删除
             candidates[i].time = -1;
         } 
         else if (gap > 0) 
         {
-            // 正常间隔 → 保留并更新时间基准
             lastGlobalNoteTime = candidates[i].time;
         }
-        // gap == 0: 同时刻双押/多押 → 保留，不更新时间基准
     }
-
+    #pragma endregion
 
 
 #pragma region 轨道分配
