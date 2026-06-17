@@ -268,11 +268,11 @@ Chart MapGenerator::generate(const string& audioFilePath)
 
     //读取音频
     vector<short> allSamples(totalSample);
-    long long actuallyRead = file.read(allSamples.data(), totalSample);
+    long long actuallyRead = file.read(&allSamples[0], totalSample);
 
     //转换为单声道
     vector<float> mono;
-    int frameCount = translate(allSamples.data(), actuallyRead, channelCount, mono);
+    int frameCount = translate(&allSamples[0], actuallyRead, channelCount, mono);
 
     cout << "谱面生成器读取完成，共 " << frameCount << " 帧" << endl;
 
