@@ -251,7 +251,7 @@ Chart MapGenerator::generate(const string& audioFilePath)
         return chart;
     }
 
-    chart.duration = (double)totalSample / sampleRate;
+    chart.duration = file.getDuration().asSeconds();
 
     cout << "音频加载成功" << endl;
     cout << "  采样率: " << sampleRate << " Hz" << endl;
@@ -267,8 +267,8 @@ Chart MapGenerator::generate(const string& audioFilePath)
 
 
     //读取音频
-    vector<short> allSamples(totalSample * channelCount);
-    long long actuallyRead = file.read(allSamples.data(), totalSample * channelCount);
+    vector<short> allSamples(totalSample);
+    long long actuallyRead = file.read(allSamples.data(), totalSample);
 
     //转换为单声道
     vector<float> mono;
