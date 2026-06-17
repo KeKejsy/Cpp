@@ -292,7 +292,7 @@ Chart MapGenerator::generate(const string& audioFilePath)
     {
        
         copy(&mono[0] + start, &mono[0] + start + m_windowSize, &fftReal[0]);
-        fill(&fftImag[0], fftImag.end(), 0);
+        fill(&fftImag[0], &fftImag[0] + fftImag.size(), 0);
 
         
         applyHannWindow(fftReal);
@@ -472,7 +472,7 @@ Chart MapGenerator::generate(const string& audioFilePath)
     }
 
     // 按时间排序
-    sort(&candidates[0], candidates.end(),
+    sort(&candidates[0], &candidates[0] + candidates.size(),
               [](const NoteCandidate& a, const NoteCandidate& b) 
               {
                   return a.time < b.time;
