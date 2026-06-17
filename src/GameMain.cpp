@@ -27,10 +27,10 @@ string openFileDialog() {
 
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = NULL;
-    ofn.lpstrFilter = "Audio Files\0*.mp3;*.ogg;*.wav;*.flac\0All Files\0*.*\0";
+    ofn.lpstrFilter = "音频文件\0*.mp3;*.ogg;*.wav;*.flac\0所有文件\0*.*\0";
     ofn.lpstrFile = filename;
     ofn.nMaxFile = MAX_PATH;
-    ofn.lpstrTitle = "Select Music File";
+    ofn.lpstrTitle = "选择音乐文件";
     ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
 
     if (GetOpenFileNameA(&ofn)) {
@@ -40,7 +40,7 @@ string openFileDialog() {
 }
 
 int main() {
-    sf::RenderWindow window(sf::VideoMode({1280, 720}), "Rhythm Master");
+    sf::RenderWindow window(sf::VideoMode({1280, 720}), "节奏大师");
     window.setFramerateLimit(60);
     
     sf::Font& font = AssetManager::getInstance().getFont();
@@ -52,7 +52,7 @@ int main() {
     ConfirmScene confirm(window, font);
     
     Chart testChart;
-    testChart.songName = "Test Song";
+    testChart.songName = "测试曲目";
     testChart.noteDensity = 120.0;
     testChart.duration = 30.0;
     

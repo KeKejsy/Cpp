@@ -19,7 +19,7 @@ public:
         : m_window(window)
         , m_font(AssetManager::getInstance().getFont())
         , m_selectedIndex(0)
-        , m_titleText(m_font, "=== Rhythm Master ===", 48)
+        , m_titleText(m_font, "=== 节奏大师 ===", 48)
         , m_titleFlashTimer(0.0) {
         setupUI();
         initParticles();
@@ -153,8 +153,8 @@ private:
             const char* label;
             MenuResult action;
         } items[] = {
-            {"Start Game", MenuResult::StartGame},
-            {"Exit", MenuResult::Exit}
+            {"开始游戏", MenuResult::StartGame},
+            {"退出", MenuResult::Exit}
         };
         
         float startY = 300.0;
