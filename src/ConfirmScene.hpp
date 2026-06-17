@@ -20,9 +20,9 @@ public:
         , m_font(font)
         , m_selectedIndex(0)
         , m_difficultyIndex(1)     // 默认 Normal
-        , m_titleText(font, "谱面就绪!", 40)
+        , m_titleText(font, "Chart Ready!", 40)
         , m_infoText(font, "", 22)
-        , m_difficultyLabel(font, "难度:", 24)
+        , m_difficultyLabel(font, "Difficulty:", 24)
         , m_difficultyValue(font, "", 28)
         , m_diffLeftArrow(font, "<", 28)
         , m_diffRightArrow(font, ">", 28) {
@@ -58,13 +58,13 @@ public:
         }
 
         stringstream ss;
-        ss << "曲目: " << chart.songName << "\n\n";
-        ss << "音符密度: " << fixed << setprecision(1) << chart.noteDensity << " NPM\n";
-        ss << "时长: " << minutes << ":" << setw(2) << setfill('0') << seconds << "\n\n";
-        ss << "总音符数: " << totalNotes << "\n";
+        ss << "Song: " << chart.songName << "\n\n";
+        ss << "Note Density: " << fixed << setprecision(1) << chart.noteDensity << " NPM\n";
+        ss << "Duration: " << minutes << ":" << setw(2) << setfill('0') << seconds << "\n\n";
+        ss << "Total Notes: " << totalNotes << "\n";
         ss << "  Tap:  " << tapCount << "\n";
         ss << "  Hold: " << holdCount << "\n\n";
-        ss << "各轨道:\n";
+        ss << "Per Track:\n";
         ss << "  D (Bass):  " << trackCounts[0] << "\n";
         ss << "  F (LoMid): " << trackCounts[1] << "\n";
         ss << "  J (HiMid): " << trackCounts[2] << "\n";
@@ -254,8 +254,8 @@ private:
             const char* label;
             ConfirmResult action;
         } buttons[] = {
-            {"开始游戏", ConfirmResult::StartGame},
-            {"返回", ConfirmResult::Back}
+            {"Start Game", ConfirmResult::StartGame},
+            {"Back", ConfirmResult::Back}
         };
 
         float startY = 530.0;        // �� 500 ���Ƶ� 530
@@ -290,7 +290,7 @@ private:
     }
 
     void updateDifficultyDisplay() {
-        static const char* names[] = {"简单", "普通", "困难"};
+        static const char* names[] = {"Easy", "Normal", "Hard"};
         static sf::Color colors[] = {
             sf::Color(100, 255, 100),   // Easy: green
             sf::Color(255, 255, 100),   // Normal: yellow

@@ -19,7 +19,7 @@ public:
         : m_window(window)
         , m_font(font)
         , m_selectedIndex(0)
-        , m_titleText(font, "=== 游戏结束 ===", 40)
+        , m_titleText(font, "=== GAME OVER ===", 40)
         , m_statsText(font, "", 20)
         , m_rankText(font, "S", 80)
         , m_animationTimer(0.0) {
@@ -30,13 +30,13 @@ public:
         m_stats = stats;
         
         stringstream ss;
-        ss << "总分: " << m_stats.totalScore << "\n\n";
+        ss << "Total Score: " << m_stats.totalScore << "\n\n";
         ss << "Perfect: " << m_stats.perfectCount << "\n";
         ss << "Great:   " << m_stats.greatCount << "\n";
         ss << "Good:    " << m_stats.goodCount << "\n";
         ss << "Miss:    " << m_stats.missCount << "\n\n";
-        ss << "最高连击: " << m_stats.maxCombo << "\n";
-        ss << "准确率: ";
+        ss << "Max Combo: " << m_stats.maxCombo << "\n";
+        ss << "Accuracy: ";
         
         int totalNotes = m_stats.perfectCount + m_stats.greatCount + m_stats.goodCount + m_stats.missCount;
         if (totalNotes > 0) {
@@ -169,8 +169,8 @@ private:
             const char* label;
             ResultAction action;
         } buttons[] = {
-            {"再来一局", ResultAction::Restart},
-            {"返回主菜单", ResultAction::BackToMenu}
+            {"Play Again", ResultAction::Restart},
+            {"Back to Menu", ResultAction::BackToMenu}
         };
         
         // �޸���ť��� - �Ӵ�������ص�

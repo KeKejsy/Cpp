@@ -15,9 +15,9 @@ public:
     LoadingScene(sf::RenderWindow& window, sf::Font& font)
         : m_window(window)
         , m_font(font)
-        , m_titleText(font, "正在生成谱面...", 40)
-        , m_subtitleText(font, "请稍候...", 20)
-        , m_hintText(font, "按 ESC 取消", 16)
+        , m_titleText(font, "Generating Chart...", 40)
+        , m_subtitleText(font, "Please wait...", 20)
+        , m_hintText(font, "Press ESC to cancel", 16)
         , m_rotationAngle(0.0)
         , m_titleFlashTimer(0.0)
         , m_cancelled(false) {
@@ -97,7 +97,7 @@ private:
         m_subtitleText.setPosition(sf::Vector2f(centerX, centerY + 90.0));
 
         // 退出提示
-        m_hintText = sf::Text(m_font, "按 ESC 取消", 16);
+        m_hintText = sf::Text(m_font, "Press ESC to cancel", 16);
         m_hintText.setFillColor(sf::Color(120, 120, 150));
         sf::FloatRect hintBounds = m_hintText.getLocalBounds();
         m_hintText.setOrigin(sf::Vector2f(hintBounds.size.x / 2.0, hintBounds.size.y / 2.0));
