@@ -587,7 +587,7 @@ Chart MapGenerator::generate(const string& audioFilePath)
 
 
 
-#pragma region 生成Note列表
+#pragma region 生成正式音符列表
     for (size_t i = 0; i < candidates.size(); i++) 
     {
         if (candidates[i].time < 0) 
@@ -612,13 +612,13 @@ Chart MapGenerator::generate(const string& audioFilePath)
     if (!chart.notes.empty()) 
     {
         chart.noteDensity = chart.notes.size() / chart.duration * 60;
-        cout << "[MapGenerator] 最终谱面: " << chart.notes.size()
+        cout << "最终谱面: " << chart.notes.size()
                   << " 个音符, Note Density: " << fixed << setprecision(1)
                   << chart.noteDensity << " NPM" << endl;
     }
     else 
     {
-        cout << "[MapGenerator] 未检测到节拍，请尝试调低难度" << endl;
+        cout << "谱面生成器未检测到节拍，请尝试调低难度" << endl;
     }
 #pragma endregion
 
